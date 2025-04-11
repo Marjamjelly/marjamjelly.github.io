@@ -9,41 +9,25 @@
 <body>
   <header>
     <h1 id="title">My Projects</h1>
-    <p id="subtitle">A showcase of all my GitHub repositories</p>
+    <p id="subtitle">A showcase of my work</p>
   </header>
   <main>
     <section id="project-list">
-      <!-- Projects will be dynamically listed here -->
+      <!-- Add your project details here -->
+      <div class="project">
+        <h2>Project Title</h2>
+        <p>A short description of the project goes here.</p>
+        <a href="#" target="_blank">View Project</a>
+      </div>
+      <div class="project">
+        <h2>Another Project</h2>
+        <p>Details about another project can go here.</p>
+        <a href="#" target="_blank">View Project</a>
+      </div>
     </section>
   </main>
   <footer>
     <a class="footer-link" href="https://github.com/Marjamjelly" target="_blank">Visit My GitHub</a>
   </footer>
-  <script>
-    async function fetchProjects() {
-      try {
-        const response = await fetch('https://api.github.com/users/Marjamjelly/repos');
-        const repos = await response.json();
-        const projectList = document.getElementById('project-list');
-
-        repos.forEach(repo => {
-          const projectDiv = document.createElement('div');
-          projectDiv.classList.add('project');
-
-          projectDiv.innerHTML = `
-            <h2>${repo.name}</h2>
-            <p>${repo.description || 'No description available'}</p>
-            <a href="${repo.html_url}" target="_blank">View Repository</a>
-          `;
-
-          projectList.appendChild(projectDiv);
-        });
-      } catch (error) {
-        console.error('Error fetching repositories:', error);
-      }
-    }
-
-    fetchProjects();
-  </script>
 </body>
 </html>
