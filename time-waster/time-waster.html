@@ -8,10 +8,21 @@
 </head>
 <body>
   <header>
+    <nav>
+      <div class="nav-container">
+        <h1 id="site-title">JS Generators</h1>
+        <ul class="nav-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../js-generators/js-generators.html">JS Generators</a></li>
+          <li><a href="../time-waster/time-waster.html">Time Waster</a></li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+  <div class="title">
     <h1 id="title">Time Waster</h1>
     <h2 id="subtitle">By Marjamjelly</h2>
-  </header>
-
+  </div>
   <main>
     <div id="time-tracker">
       <div id="seconds">
@@ -26,11 +37,9 @@
       <div id="time-to-next-rank"></div>
     </div>
   </main>
-
   <footer>
     <p>© 2025 Marjamjelly. All rights reserved.</p>
   </footer>
-
   <script>
     let totalSeconds = 0;
     const timeTracker = document.getElementById('time-tracker');
