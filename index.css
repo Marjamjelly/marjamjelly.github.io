@@ -66,7 +66,7 @@ main {
   padding: 20px;
 }
 
-#info {
+p {
   max-width: 800px;
   line-height: 1.6;
   text-align: center;
