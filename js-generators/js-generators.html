@@ -31,6 +31,8 @@
         <option value="geopolitics">Geopolitics</option>
         <option value="OG">OG</option>
         <option value="weirdSentences">Weird Sentences</option>
+        <option value="rumor">Rumors</option>
+        <option value="headline">Headlines</option>
       </select>
       <button id="generate-btn">Generate</button>
       <p id="output"></p>
@@ -71,12 +73,35 @@
       const statement = pickWord(people) + " wants to wrap their " + pickWord(bodyParts) + " around my " + pickWord(objects) + ". Should I be concerned?";
       return statement;
     };
+    rumor = function () {
+      const people1 = ["Josie", "Theo", "Gabriel", "Jackson Daddy", "Finley Higinbotham", "Isadora Kim", "Principal Freeman", "Ms. Bolopue", "Mr. Putnam", "Eamon", "Ms. Williams", "Mr. Sezer", "Sra. Johnson", "François", "Viktor", "YARL", "Hser", "Alex", "Jonah", "Jackson", "Jacob", "Henry", "Mr. Osman", "Aisha", "Aubrielle", "Joelle", "M Robinson", "Ms. Lisa", "Roland", "Graham", "Noah", "Asher", "Mr. Ford", "Mr. Fulton", "Mr. Colestock", "Mr. Warner", "Mr. Randrup", "Ms. Williams", "Mr. Ellickson", "Ms. Kelly", "Ms. Hawksford", "Sra. Villa", "Ms. Ross", "Franck", "May"];
+      const people2 = ["Josie", "Theo", "Gabriel", "Jackson Daddy", "Finley Higinbotham", "Isadora Kim", "Principal Freeman", "Ms. Bolopue", "Mr. Putnam", "Eamon", "Ms. Williams", "Mr. Sezer", "Sra. Johnson", "François", "Viktor", "YARL", "Hser", "Alex", "Jonah", "Jackson", "Jacob", "Henry", "Mr. Osman", "Aisha", "Aubrielle", "Joelle", "M Robinson", "Ms. Lisa", "Roland", "Graham", "Noah", "Asher", "Mr. Ford", "Mr. Fulton", "Mr. Colestock", "Mr. Warner", "Mr. Randrup", "Ms. Williams", "Mr. Ellickson", "Ms. Kelly", "Ms. Hawksford", "Sra. Villa", "Ms. Ross", "Franck", "May"];
+      const want = ["fornicate", "get married", "have a child", "make more working class allies for glorious Motherland", "run for president together", "stick the hotdog in the bun", "sniff each other", "get rizzy", "make a threesome with Sra. Villa"];
+      const reaction = ["I wish I could join!", "It sounds moist.", "It sounds like something straight out of a Hike Hike and Jeshua roleplay.", "I bet Trump would join.", "Thats crazy", "Delicious. Absolutely delicious."];
+      const pickWord = function (words) {
+        return words[Math.floor(Math.random() * words.length)];
+      };
+      const statement = "I heard " + pickWord(people1) + " and " + pickWord(people2) + " want to " + pickWord(want) + ". " + pickWord(reaction);
+      return statement;
+    };
+    headline = function () {
+      const people = ["Mr. Beast", "Barack Obama", "JD Vance", "Kamalalalalalalalalalala", "Tim Walz", "Putin", "John Wilkes Booth", "Lee Harvey Oswald", "RFK", "Netanyahu", "Kim Jong Un", "Stalin", "Lenin", "Gorbachev", "Xi Jinping", "Trotsky", "Fidel Castro", "Boris Johnson", "Volodymyr Zelenskyy", "Ronald Reagan", "Nixon", "Donald J Trump", "Hitler", "Winston Churchill", "JFK", "Karl Marx", "Bill Clinton", "the president of Nauru", "the one person who actually lives in Wyoming", "George Washington", "Einstein", "Elon Musk", "Bill gates", "Jeff Bezos", "Diddy", "The Hawk Tuah Girl", "Kim Kardashian", "Ice Spice", "Drake", "Justin Bieber", "Steven He", "Sabrina Carpenter", "Kanye West", "Mariah Carey", "Beyoncé", "PewDiePie", "Markiplier", "Khaby Lame", "Mia Khalifa", "Caseoh"];
+      const actions = ["rebuilt the twin towers", "rebuilt the Berlin Wall", "supported Hamas", "voted for Trump", "supported Russia's invasion of Ukraine", "supported Ukraines invasion of Russia", "supported imperial Japan because it worked so well last time", "supported the reunification of the USSR", "made Yugoslavia but bigger", "made murica Great Again", "shot some Cheeto in the ear", "made Austria-Hungary 2.0", "made Britain Great Again", "made France Great Again", "built the wall", "torn down that wall", "tapped into Canadas maple syrup reserves", "restored Germany to its former glory", "revived Hitler", "restored Mongolia to their former glory", "made some pagers go boom", "played Global Thermonuclear War", "invaded Cyprus", "drained the Mediterranean", "gotten breast enlargement surgery", "gotten penis enlargement surgery", "gotten more Botox than was previously thought possible", "went to a Diddy Party", "went to Mr. Es secret island", "played League Of Legends", "got banned from twitch for nudity", "started an onlyfans"];
+      const ashamed = ["their German relatives", "the fact they have a secret fetish for Kim Jong Un", "the size of their earlobes", "the things they did back in the 60s", "the fact the voted for Santa Claus in the 2016 election", "the fact they have hair", "the length of their tongue", "their former involvement with the British Empire", "the fact they are bigger than Caseoh", "the length of their brothers…tube", "their secret crush on their cousins", "all the hair they ate as a child", "the fact they still think Africa is a country", "the certain flag bearing a Hindu symbol"];
+      const pickWord = function (words) {
+        return words[Math.floor(Math.random() * words.length)];
+      };
+      const statement = "BREAKING NEWS " + pickWord(people) + " has " + pickWord(actions) + " because they are ashamed of " + pickWord(ashamed);
+      return statement;
+    };
 
     // Generator Mapping
     const generators = {
       geopolitics: geopolitics,
       OG: OG,
-      weirdSentences:weirdSentences
+      weirdSentences:weirdSentences,
+      rumor:rumor,
+      headline:headline
       // Add more mappings here as needed
     };
 
