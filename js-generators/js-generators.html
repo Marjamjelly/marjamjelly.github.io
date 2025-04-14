@@ -63,6 +63,7 @@
       return statement;
     };
 
+    // Weird sentences generator 
     weirdSentences = function () {
       const people = ["my sister", "my best friend", "my mom", "my cousin", "my coach", "my best man", "my therapist", "my father", "my brother", "Josie", "Theo", "Gabriel", "Jackson Daddy", "Finley Higinbotham", "Isadora Kim", "Principal Freeman", "Ms. Bolopue", "Mr. Putnam", "Eamon", "Ms. Williams", "Mr. Sezer", "Sra. Johnson", "François", "Viktor", "YARL", "Hser", "Alex", "Jonah", "Jackson", "Jacob", "Henry", "Aisha", "Aubrielle", "Joelle", "M Robinson", "Ms. Lisa", "Roland", "Graham", "Noah", "Asher", "Prince Ali, Fabulous he, Ali Ababwa", "Barack Obama", "ChatGPT", "Mr. Ford", "Mr. Fulton", "Mr. Colestock", "Mr. Warner", "Mr. Randrup", "Ms. Williams", "Mr. Ellickson", "Finn Wolfhard", "Ms. Kelly", "Ms. Hawksford", "Sra. Villa", "Ms. Ross", "JD Vance", "Kamala", "Tim Walz", "Putin", "the shine on Mr. Fultons bald head", "Jesus", "John Wilkes Booth", "Lee Harvey Oswald", "RFK", "Stalin", "Lenin", "Gorbachev", "Kim Jong Un", "Caseoh", "Franck", "May"];
       const bodyParts = ["eyelids", "mouth", "arms", "stomach", "appendix", "legs", "hair", "nose", "tongue", "toes", "fingers", "intestines"];
@@ -73,6 +74,8 @@
       const statement = pickWord(people) + " wants to wrap their " + pickWord(bodyParts) + " around my " + pickWord(objects) + ". Should I be concerned?";
       return statement;
     };
+
+    // Rumor generator
     rumor = function () {
       const people1 = ["Josie", "Theo", "Gabriel", "Jackson Daddy", "Finley Higinbotham", "Isadora Kim", "Principal Freeman", "Ms. Bolopue", "Mr. Putnam", "Eamon", "Ms. Williams", "Mr. Sezer", "Sra. Johnson", "François", "Viktor", "YARL", "Hser", "Alex", "Jonah", "Jackson", "Jacob", "Henry", "Mr. Osman", "Aisha", "Aubrielle", "Joelle", "M Robinson", "Ms. Lisa", "Roland", "Graham", "Noah", "Asher", "Mr. Ford", "Mr. Fulton", "Mr. Colestock", "Mr. Warner", "Mr. Randrup", "Ms. Williams", "Mr. Ellickson", "Ms. Kelly", "Ms. Hawksford", "Sra. Villa", "Ms. Ross", "Franck", "May"];
       const people2 = ["Josie", "Theo", "Gabriel", "Jackson Daddy", "Finley Higinbotham", "Isadora Kim", "Principal Freeman", "Ms. Bolopue", "Mr. Putnam", "Eamon", "Ms. Williams", "Mr. Sezer", "Sra. Johnson", "François", "Viktor", "YARL", "Hser", "Alex", "Jonah", "Jackson", "Jacob", "Henry", "Mr. Osman", "Aisha", "Aubrielle", "Joelle", "M Robinson", "Ms. Lisa", "Roland", "Graham", "Noah", "Asher", "Mr. Ford", "Mr. Fulton", "Mr. Colestock", "Mr. Warner", "Mr. Randrup", "Ms. Williams", "Mr. Ellickson", "Ms. Kelly", "Ms. Hawksford", "Sra. Villa", "Ms. Ross", "Franck", "May"];
@@ -84,6 +87,8 @@
       const statement = "I heard " + pickWord(people1) + " and " + pickWord(people2) + " want to " + pickWord(want) + ". " + pickWord(reaction);
       return statement;
     };
+
+    // Headline generator
     headline = function () {
       const people = ["Mr. Beast", "Barack Obama", "JD Vance", "Kamalalalalalalalalalala", "Tim Walz", "Putin", "John Wilkes Booth", "Lee Harvey Oswald", "RFK", "Netanyahu", "Kim Jong Un", "Stalin", "Lenin", "Gorbachev", "Xi Jinping", "Trotsky", "Fidel Castro", "Boris Johnson", "Volodymyr Zelenskyy", "Ronald Reagan", "Nixon", "Donald J Trump", "Hitler", "Winston Churchill", "JFK", "Karl Marx", "Bill Clinton", "the president of Nauru", "the one person who actually lives in Wyoming", "George Washington", "Einstein", "Elon Musk", "Bill gates", "Jeff Bezos", "Diddy", "The Hawk Tuah Girl", "Kim Kardashian", "Ice Spice", "Drake", "Justin Bieber", "Steven He", "Sabrina Carpenter", "Kanye West", "Mariah Carey", "Beyoncé", "PewDiePie", "Markiplier", "Khaby Lame", "Mia Khalifa", "Caseoh"];
       const actions = ["rebuilt the twin towers", "rebuilt the Berlin Wall", "supported Hamas", "voted for Trump", "supported Russia's invasion of Ukraine", "supported Ukraines invasion of Russia", "supported imperial Japan because it worked so well last time", "supported the reunification of the USSR", "made Yugoslavia but bigger", "made murica Great Again", "shot some Cheeto in the ear", "made Austria-Hungary 2.0", "made Britain Great Again", "made France Great Again", "built the wall", "torn down that wall", "tapped into Canadas maple syrup reserves", "restored Germany to its former glory", "revived Hitler", "restored Mongolia to their former glory", "made some pagers go boom", "played Global Thermonuclear War", "invaded Cyprus", "drained the Mediterranean", "gotten breast enlargement surgery", "gotten penis enlargement surgery", "gotten more Botox than was previously thought possible", "went to a Diddy Party", "went to Mr. Es secret island", "played League Of Legends", "got banned from twitch for nudity", "started an onlyfans"];
