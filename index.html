@@ -2,87 +2,165 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>WELCOME TO MY ULTRA 90s PAGE</title>
+  <title>WELCOME TO H3LLZONE</title>
   <style>
     body {
-      background-image: url("https://web.archive.org/web/20091027113210im_/http://www.geocities.com/firefoxchi/backgrounds/star2.gif");
-      color: lime;
-      font-family: Comic Sans MS, cursive, sans-serif;
-      text-align: center;
+      margin: 0;
+      padding: 0;
+      font-family: "Comic Sans MS", cursive, sans-serif;
+      font-size: 16px;
+      background-color: #000000;
+      color: #00FF00;
     }
-    h1 {
-      font-size: 48px;
-      color: yellow;
-      background-color: blue;
-      padding: 10px;
-      border: 5px dotted red;
-      text-shadow: 2px 2px black;
-    }
+
     a {
-      color: cyan;
-      text-decoration: underline;
+      color: #FF00FF;
+      background-color: yellow;
+      text-decoration: underline overline;
       font-weight: bold;
     }
+
     a:hover {
       color: red;
-      background-color: yellow;
+      background-color: lime;
+      font-size: 120%;
     }
+
     marquee {
-      font-size: 20px;
-      color: #FF00FF;
-      background-color: black;
-      padding: 6px;
+      font-size: 24px;
+      font-weight: bold;
+      color: cyan;
+      background-color: magenta;
+      padding: 8px;
+      border: 4px double red;
     }
-    .content {
-      margin: 20px auto;
-      padding: 20px;
-      border: 6px ridge fuchsia;
-      background-color: rgba(0,0,0,0.7);
-      max-width: 800px;
-    }
-    .under-construction {
-      width: 100px;
-    }
+
     blink {
-      animation: blink-animation 0.7s steps(2, start) infinite;
+      animation: blink-animation 0.4s steps(2, start) infinite;
     }
+
     @keyframes blink-animation {
       to { visibility: hidden; }
+    }
+
+    .layout {
+      display: table;
+      width: 100%;
+      height: 100vh;
+      table-layout: fixed;
+    }
+
+    .sidebar {
+      display: table-cell;
+      width: 15%;
+      background-color: #222222;
+      color: #FFFF00;
+      vertical-align: top;
+      padding: 10px;
+      font-size: 14px;
+      text-align: left;
+      border-right: 3px dashed hotpink;
+    }
+
+    .main {
+      display: table-cell;
+      width: 70%;
+      background-color: #000080;
+      color: #00FFFF;
+      padding: 20px;
+      overflow-y: scroll;
+    }
+
+    .sidebar-right {
+      display: table-cell;
+      width: 15%;
+      background-color: #111111;
+      color: #FF6600;
+      vertical-align: top;
+      padding: 10px;
+      border-left: 3px dotted lime;
+    }
+
+    .footer {
+      width: 100%;
+      background-color: #6600CC;
+      color: white;
+      font-weight: bold;
+      text-align: center;
+      padding: 10px;
+      border-top: 4px ridge yellow;
+      position: relative;
+    }
+
+    .footer marquee {
+      background-color: transparent;
+      color: #FFAAAA;
+      border: none;
+    }
+
+    .header {
+      background-color: #FF0000;
+      color: #00FF00;
+      text-align: center;
+      padding: 15px;
+      font-size: 32px;
+      font-weight: bold;
+      border-bottom: 5px double #00FFFF;
+    }
+
+    .nav-link {
+      display: block;
+      margin: 5px 0;
     }
   </style>
 </head>
 <body>
 
-  <marquee scrollamount="10">🚨 WELCOME TO THE BEST WEBSITE IN THE UNIVERSE 🚨</marquee>
-
-  <h1><blink>MY AWESOME 90s HOMEPAGE</blink></h1>
-
-  <img src="https://web.archive.org/web/20091027095325im_/http://www.geocities.com/BourbonStreet/Square/7405/bar7.gif" alt="divider">
-
-  <div class="content">
-    <p><b>Best viewed in Netscape Navigator with images turned off!</b></p>
-
-    <p>🔗 <a href="essay1.html">Why Simplicity Wins</a></p>
-    <p>📜 <a href="essay2.html">The Deep Stuff</a></p>
-    <p>📐 <a href="math/prime_theory.txt">Prime Theory (text file)</a></p>
-    <p>🧠 <a href="notes/thoughts.md">Random Thoughts (markdown)</a></p>
-
-    <hr>
-
-    <p><blink>UNDER CONSTRUCTION!</blink></p>
-    <img src="https://web.archive.org/web/20091027105926im_/http://www.geocities.com/SoHo/Studios/1158/construction8.gif" alt="Under construction" class="under-construction">
-
-    <p><a href="mailto:webmaster@geocities.com">💌 Contact Me!</a></p>
-    <p><img src="https://web.archive.org/web/20091027093710im_/http://geocities.com/Paris/Rue/4036/counter.gif" alt="Hit Counter"> You are visitor #42!</p>
+  <div class="header">
+    <marquee behavior="alternate" scrollamount="12">💥💥 WELCOME TO H3LLZONE 💥💥</marquee>
+    <blink>BEST SITE ON THE WEB 🚀🚀🚀</blink>
   </div>
 
-  <img src="https://web.archive.org/web/20091027095325im_/http://www.geocities.com/BourbonStreet/Square/7405/bar7.gif" alt="divider">
+  <div class="layout">
+    <div class="sidebar">
+      <h3><blink>MENU</blink></h3>
+      <a href="essay1.html" class="nav-link">👉 Essay 1</a>
+      <a href="essay2.html" class="nav-link">👉 Essay 2</a>
+      <a href="math/prime_theory.txt" class="nav-link">👉 Prime Theory</a>
+      <a href="notes/thoughts.md" class="nav-link">👉 Thoughts</a>
+      <hr>
+      <blink>🔄 Refresh Often!</blink>
+    </div>
 
-  <marquee direction="up" scrollamount="2" height="40">💾 Don't forget to bookmark this page!</marquee>
+    <div class="main">
+      <h1><blink>🌐 MAIN ZONE 🌐</blink></h1>
+      <p>Welcome to the *worst-designed* site on the web. We've got:</p>
+      <ul>
+        <li>Scrolling text</li>
+        <li>Terrible colors</li>
+        <li>Table-based layout</li>
+        <li>No images at all</li>
+        <li>So many sidebars</li>
+      </ul>
+      <p>Don't forget to <a href="mailto:hellmaster@angelfire.com">EMAIL THE WEBMASTER</a> if your brain starts melting.</p>
+      <hr>
+      <blink><marquee behavior="slide" scrollamount="20">🔥🔥🔥 CONTENT UNDER EXTREME CONSTRUCTION 🔥🔥🔥</marquee></blink>
+    </div>
 
-  <audio autoplay loop>
-    <source src="https://archive.org/download/MIDI-music/mortal_kombat_theme.mid" type="audio/midi">
-  </audio>
+    <div class="sidebar-right">
+      <h3>💬 NEWS</h3>
+      <p>Site launched: 1997<br>Redesigned: never</p>
+      <hr>
+      <h3>💡 TIPS</h3>
+      <ul>
+        <li>Use dial-up</li>
+        <li>Disable JavaScript</li>
+        <li>Embrace the blink</li>
+      </ul>
+    </div>
+  </div>
 
-</body>
-</html>
+  <div class="footer">
+    <marquee behavior="alternate" scrollamount="7">✨✨✨ Thanks 4 Visiting ✨✨✨</marquee>
+    <p><blink>Last updated: Y2K</blink></p>
+  </div>
