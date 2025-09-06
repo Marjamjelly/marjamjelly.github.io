@@ -1,0 +1,16 @@
+body {
+    font-family: 'Courier New', Courier, monospace;
+    color: #ebebeb;
+    background-color: #303030;
+    margin: 10px;
+}
+
+.header {
+    text-align: center;
+}
+
+a {
+    margin: 15px;
+    color: #ebebeb;
+    text-decoration: underline;
+}
