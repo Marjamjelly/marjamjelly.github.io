@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Big Number Calculator v.3</title>
+  <script src="https://cdn.jsdelivr.net/npm/big.js@6.2.1/big.min.js"></script>
+</head>
+<body>
+  <div id="version">v.4</div>
+  <h1>Big Number Calculator</h1>
+
+  <div>
+    <input id="num1" type="text" placeholder="Number 1" />
+    <input id="num2" type="text" placeholder="Number 2 (if needed)" />
+    <br/>
+    <button onclick="calculate('add')">Add</button>
+    <button onclick="calculate('subtract')">Subtract</button>
+    <button onclick="calculate('multiply')">Multiply</button>
+    <button onclick="calculate('divide')">Divide</button>
+    <button onclick="calculate('mod')">Modulus</button>
+    <button onclick="calculate('power')">Exponent</button>
+    <button onclick="calculate('factorial')">Factorial</button>
+  </div>
+
+  <div style="margin-top: 1rem;">
+    <label><input type="checkbox" id="sciToggle"> Scientific Notation</label>
+    <button onclick="copyResult()">Copy Result</button>
+  </div>
+
+  <div id="digits"></div>
+  <div id="result"></div>
+
+  <script>
+    function calculate(op) {
+      const useSci = document.getElementById("sciToggle").checked;
+      const num1 = document.getElementById("num1").value.trim();
+      const num2 = document.getElementById("num2").value.trim();
+      let result;
+
+      try {
+        if (op === 'factorial') {
+          let n = BigInt(num1);
+          if (n < 0n) return display("Factorial not defined for negatives.");
+          if (n > 100000n) {
+            const approx = stirlingApproximation(Number(n));
+            return display(formatBig(approx, useSci), approx.toFixed(0).length, true);
+          }
+          result = 1n;
+          for (let i = 2n; i <= n; i++) result *= i;
+          return display(result.toString(), result.toString().length);
+        }
+
+        let a = new Big(num1);
+        let b = new Big(num2 || '0');
+
+        switch(op) {
+          case 'add': result = a.plus(b); break;
+          case 'subtract': result = a.minus(b); break;
+          case 'multiply': result = a.times(b); break;
+          case 'divide':
+            if (b.eq(0)) return display("Cannot divide by zero.");
+            result = a.div(b); break;
+          case 'mod':
+            if (b.eq(0)) return display("Cannot mod by zero.");
+            result = a.mod(b); break;
+          case 'power':
+            if (!b.round(0, 0).eq(b) || b.lt(0)) return display("Exponent must be a non-negative integer.");
+            result = new Big(1);
+            for (let i = 0; i < b.toNumber(); i++) result = result.times(a);
+            break;
+          default:
+            return display("Unknown operation");
+        }
+
+        display(formatBig(result, useSci), result.toFixed(0).length);
+      } catch (e) {
+        display("Error: " + e.message);
+      }
+    }
+
+    function stirlingApproximation(n) {
+      const PI = Math.PI;
+      const ln2PiN = Math.log(2 * PI * n) / 2;
+      const lnFact = n * Math.log(n) - n + ln2PiN;
+      return Big(Math.exp(lnFact));
+    }
+
+    function formatBig(big, sci) {
+      return sci ? big.toExponential(10) : big.toFixed();
+    }
+
+    function display(text, digitCount = 0, approx = false) {
+      document.getElementById("digits").textContent = digitCount ? 
+        `(Approximate: ${approx ? "yes" : "no"} — ${digitCount.toLocaleString()} digits)` : '';
+      document.getElementById("result").textContent = `Result: ${text}`;
+    }
+
+    function copyResult() {
+      const resultText = document.getElementById("result").textContent.replace(/^Result:\s*/, '');
+      navigator.clipboard.writeText(resultText).then(() => {
+        alert("Copied to clipboard!");
+      }).catch(err => {
+        alert("Failed to copy: " + err);
+      });
+    }
+  </script>
+</body>
+</html>
