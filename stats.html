@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title></title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <a href="../index.html">Home Page</a> | <a href="../all.html">All pages</a> <br>
+  <h1>Site Stats</h1>
+  <h3>Total Site visits</h3>
+  <p id="visits"></p>
+  <h3>Current users</h3>
+  <p id="users"></p>
+  <h3>Number of pages</h3>
+  <p id="pages"></p>
+  <h3>Amount of social security numbers stolen from users</h3>
+  <p id="ssNumbers"></p>
+
+  <script>
+    const visitsNumber = Math.floor(Math.random() * 10000000);
+    document.getElementById('visits').textContent = visitsNumber;
+
+    const usersNumber = Math.floor(Math.random() * 10000000);
+    document.getElementById('users').textContent = usersNumber;
+
+    const pagesNumber = Math.floor(Math.random() * 1000000000);
+    document.getElementById('pages').textContent = pagesNumber;
+
+    const ssNumbersAmount = Math.floor(Math.random() * 10000000);
+    document.getElementById('ssNumbers').textContent = ssNumbersAmount;
+  </script>
+</body>
+</html>
