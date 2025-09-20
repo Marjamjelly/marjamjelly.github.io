@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Rule 34 - Posts</title>
+  <style>
+    body {
+      background: #b3e6b3;
+      font-family: Verdana, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #090;
+    }
+    .header {
+      background: #b3e6b3;
+      border-bottom: 2px solid #8bc98b;
+      padding: 0 0 8px 0;
+      position: relative;
+    }
+    .header .sitename {
+      font-size: 2em;
+      font-weight: bold;
+      color: #2126e6;
+      padding-left: 10px;
+      padding-top: 10px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .nav {
+      display: flex;
+      gap: 22px;
+      font-size: 1em;
+      font-weight: normal;
+      padding: 6px 0 0 10px;
+      flex-wrap: wrap;
+    }
+    .nav a, .nav span {
+      color: #2126e6;
+      text-decoration: none;
+      padding: 2px 6px;
+      border-radius: 3px;
+      transition: background 0.2s;
+    }
+    .nav .active {
+      background: #e7ffe7;
+      box-shadow: 0 0 2px #2126e6;
+      font-weight: bold;
+    }
+    .nav .other-sites {
+      color: #2126e6;
+      font-weight: bold;
+      text-decoration: underline;
+    }
+    .subnav {
+      background: #abd9ab;
+      font-size: 0.98em;
+      padding: 2px 0 2px 10px;
+      display: flex;
+      gap: 18px;
+      border-bottom: 1px solid #8bc98b;
+    }
+    .subnav a {
+      color: #2126e6;
+      text-decoration: none;
+      padding: 1px 6px;
+      border-radius: 2px;
+    }
+    .main-container {
+      display: flex;
+      padding: 14px;
+    }
+    .sidebar {
+      min-width: 220px;
+      margin-right: 30px;
+    }
+    .sidebar h3 {
+      font-size: 1.1em;
+      margin-top: 18px;
+      margin-bottom: 6px;
+      color: #000;
+      letter-spacing: 0.5px;
+    }
+    .sidebar .search {
+      margin-bottom: 10px;
+    }
+    .sidebar input[type="text"] {
+      display: block;
+      margin-bottom: 4px;
+      width: 95%;
+      border: 1px solid #aaa;
+      border-radius: 3px;
+      padding: 2px 3px;
+      font-size: 1em;
+    }
+    .sidebar label {
+      font-size: 0.98em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 5px;
+    }
+    .sidebar .tags {
+      color: #000;
+      font-size: 0.98em;
+    }
+    .sidebar .tags a {
+      color: #2126e6;
+      text-decoration: underline;
+      font-weight: bold;
+      margin-right: 4px;
+    }
+    .gallery {
+      width: 100%;
+    }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 170px);
+      gap: 26px 36px;
+      justify-content: start;
+    }
+    .thumb {
+      background: #fff;
+      border: 2px solid #8bc98b;
+      border-radius: 4px;
+      width: 170px;
+      height: 210px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      overflow: hidden;
+      box-shadow: 0 2px 7px rgba(0,0,0,0.07);
+      margin-bottom: 10px;
+      position: relative;
+    }
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      border-radius: 2px;
+    }
+    .pagination {
+      margin-top: 28px;
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      font-size: 1.08em;
+    }
+    .pagination a, .pagination span {
+      color: #2126e6;
+      background: #e7ffe7;
+      border: 1px solid #8bc98b;
+      border-radius: 2px;
+      padding: 3px 10px;
+      text-decoration: none;
+      font-weight: bold;
+      margin: 0 1px;
+      transition: background 0.2s;
+    }
+    .pagination .current {
+      background: #b3e6b3;
+      color: #000;
+      border: 1.5px solid #2126e6;
+    }
+    @media (max-width: 950px) {
+      .main-container {
+        flex-direction: column;
+      }
+      .sidebar {
+        margin-bottom: 20px;
+      }
+      .gallery-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 600px) {
+      .gallery-grid {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        min-width: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <span class="sitename">Rule 34</span>
+    <nav class="nav">
+      <a href="#">My Account</a>
+      <span class="active">Posts</span>
+      <a href="#">Comments</a>
+      <a href="#">Wiki</a>
+      <a href="#">Aliases</a>
+      <a href="#">Artists</a>
+      <a href="#">Tags</a>
+      <a href="#">Pools</a>
+      <a href="#">Forum</a>
+      <a href="#">iCame Top 100</a>
+      <a href="#">Help</a>
+      <a href="#">Discord</a>
+      <span style="color:#ff7272;font-weight:bold;">&#128539; AI NYMPHS</span>
+      <span class="other-sites">Other Sites</span>
+    </nav>
+    <nav class="subnav">
+      <a href="#">Video</a>
+      <a href="#">Upload</a>
+      <a href="#">Upload Video</a>
+      <a href="#">Random</a>
+      <a href="#">Contact Us</a>
+      <a href="#">DMCA</a>
+      <a href="#">About</a>
+      <a href="#">Help</a>
+      <a href="#">IMG Servers</a>
+      <a href="#">TagMap</a>
+      <a href="#">TOS</a>
+    </nav>
+  </div>
+  <div class="main-container">
+    <aside class="sidebar">
+      <form class="search">
+        <input type="text" placeholder="Search">
+        <input type="text" placeholder="">
+        <label>
+          <input type="checkbox"> Filter AI posts
+        </label>
+      </form>
+      <div class="tags">
+        <h3>Tags</h3>
+        <b>Copyright</b><br>
+        <a href="#">? + atastic 27</a><br>
+        <a href="#">? + naruto 175675</a><br>
+        <a href="#">? + naruto (series) 111406</a><br>
+        <a href="#">? + naruto shippuden 81737</a><br>
+        <a href="#">? + naruto: the last 11458</a><br>
+        <b>Character</b><br>
+        <a href="#">? + cream (movailarts) 11</a><br>
+        <a href="#">? + hyuuga hinata 34366</a><br>
+        <a href="#">? + office lady (atastic) 43</a><br>
+        <a href="#">? + sakura haruno 32699</a><br>
+        <b>Artist</b><br>
+        <a href="#">? + crimson kaiserin 609</a><br>
+        <a href="#">? + movailarts 84</a><br>
+        <b>General</b><br>
+        <a href="#">? + 1futa 587487</a><br>
+        <a href="#">? + 1girls 4166735</a><br>
+        <a href="#">? + areolae 826295</a><br>
+        <a href="#">? + ass 3338104</a><br>
+        <a href="#">? + ass focus 333836</a><br>
+        <a href="#">? + big ass 1416624</a><br>
+        <a href="#">? + big breasts 2910718</a><br>
+        <a href="#">? + big penis 1152047</a><br>
+      </div>
+    </aside>
+    <main class="gallery">
+      <div class="gallery-grid">
+        <div class="thumb"><img src="https://placekitten.com/300/420" alt="placeholder"></div>
+        <div class="thumb"><img src="https://placebear.com/300/420" alt="placeholder"></div>
+        <div class="thumb"><img src="https://placehold.co/300x420?text=Image+3" alt="placeholder"></div>
+        <div class="thumb"><img src="https://placehold.co/300x420?text=Image+4" alt="placeholder"></div>
+        <div class="thumb"><img src="https://placehold.co/300x420?text=Image+5" alt="placeholder"></div>
+        <div class="thumb"><img src="https://placehold.co/300x420?text=Image+6" alt="placeholder"></div>
+        <div class="thumb"><img src="https://placehold.co/300x420?text=Image+7" alt="placeholder"></div>
+        <div class="thumb"><img src="https://placehold.co/300x420?text=Image+8" alt="placeholder"></div>
+      </div>
+      <div class="pagination">
+        <a href="#">&lt; Prev</a>
+        <span class="current">1</span>
+        <a href="#">2</a>
+        <a href="#">3</a>
+        <a href="#">4</a>
+        <span>...</span>
+        <a href="#">Next &gt;</a>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
