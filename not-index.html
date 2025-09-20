@@ -211,29 +211,7 @@
     </style>
 </head>
 <body>
-    <div class="floating-elements">
-        <div class="floating-f">F</div>
-        <div class="floating-f">U</div>
-        <div class="floating-f">C</div>
-        <div class="floating-f">K</div>
-        <div class="floating-f">!</div>
-    </div>
-
-    <div class="main-message">FUCK YOU</div>
     
-    <div class="subtitle">404: Page Not Found, Dipshit</div>
-    
-    <div class="explanation">
-        Well, well, well... look what we have here. You've managed to break the internet. 
-        Congratulations, you absolute genius! The page you're looking for doesn't exist, 
-        probably never existed, and frankly, we're questioning your life choices right now.
-        <br><br>
-        Maybe you typed the URL wrong with your sausage fingers, or maybe you clicked 
-        on a link that was deader than your social life. Either way, you're here now, 
-        basking in the glory of your failure.
-    </div>
-    
-    <button onclick="showGotcha()" class="home-button">Take Me Home (Please)</button>
 
     <!-- Hidden gotcha page -->
     <div id="gotcha-page" class="hidden gotcha-page" style="position: absolute; top: 0; left: 0; width: 100%; height: 100vh; background: linear-gradient(45deg, #ff4757, #ff3742, #ff6348, #ffa502); background-size: 400% 400%; animation: gradientShift 6s ease infinite; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
@@ -255,16 +233,5 @@
             strong suit.
             <br><br>
     </div>
-
-    <script>
-        function showGotcha() {
-            // Hide the original 404 content
-            document.querySelector('body > *:not(#gotcha-page)').style.display = 'none';
-            
-            // Show the gotcha page
-            document.getElementById('gotcha-page').classList.remove('hidden');
-            document.getElementById('gotcha-page').style.display = 'flex';
-        }
-    </script>
 </body>
 </html>
