@@ -5,25 +5,29 @@
 }
 
 body {
-  font-family: 'Courier New', Consolas, monospace;
-  background: #1a1a1a;
-  color: #e0e0e0;
-  padding: 20px;
+  font-family: 'Courier New', Courier, monospace;
+  color: #ebebeb;
+  background-color: #303030;
+  margin: 20px;
   line-height: 1.4;
 }
 
+.header {
+  text-align: center;
+}
+
 a {
-  color: #88cc88;
+  margin: 15px;
+  color: #ebebeb;
   text-decoration: underline;
 }
 
 a:hover {
-  color: #aaffaa;
-  background: #2a2a2a;
+  background-color: #404040;
 }
 
 a:visited {
-  color: #aa88cc;
+  color: #cccccc;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -45,31 +49,30 @@ li {
 }
 
 blockquote {
-  border-left: 3px solid #666;
+  border-left: 3px solid #666666;
   padding-left: 15px;
   margin: 15px 0;
-  color: #ccc;
+  color: #cccccc;
 }
 
 code {
-  background: #2a2a2a;
+  background-color: #404040;
   padding: 2px 5px;
   border-radius: 3px;
-  color: #ffcc66;
+  color: #ffffff;
 }
 
 pre {
-  background: #2a2a2a;
+  background-color: #404040;
   padding: 15px;
   margin: 15px 0;
   border-radius: 5px;
   overflow-x: auto;
-  color: #ffcc66;
 }
 
 hr {
   border: none;
-  border-top: 1px solid #666;
+  border-top: 1px solid #666666;
   margin: 20px 0;
 }
 
@@ -80,12 +83,12 @@ table {
 }
 
 th, td {
-  border: 1px solid #666;
+  border: 1px solid #666666;
   padding: 8px 12px;
   text-align: left;
 }
 
 th {
-  background: #2a2a2a;
+  background-color: #404040;
   color: #ffffff;
 }
