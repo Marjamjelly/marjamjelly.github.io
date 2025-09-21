@@ -13,7 +13,27 @@ body {
 }
 
 .header {
+  text-align: left;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #666666;
+}
+
+.header nav {
+  margin-top: 0;
+}
+
+main {
+  margin: 30px 0;
+  min-height: 60vh;
+}
+
+footer {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #666666;
   text-align: center;
+  color: #cccccc;
 }
 
 a {
