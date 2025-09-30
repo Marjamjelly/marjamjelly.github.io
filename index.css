@@ -13,6 +13,7 @@ a {
     margin: 15px;
     color: #ebebeb;
     text-decoration: underline;
+    transition: transform 0.1s ease;
 }
 a:hover {
   transform: scale(1.1);
