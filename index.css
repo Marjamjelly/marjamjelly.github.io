@@ -14,3 +14,6 @@ a {
     color: #ebebeb;
     text-decoration: underline;
 }
+a:hover {
+  transform: scale(1.1);
+}

@@ -37,6 +37,7 @@ text-decoration: underline;
 }
 a:hover {
 background-color: #404040;
+transform: scale(1.1);
 }
 a:visited {
 color: #cccccc;
