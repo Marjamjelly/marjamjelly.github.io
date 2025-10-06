@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Untitled - Text Editor</title>
+    <link rel="stylesheet" href="retro.css">
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="editor-window">
+        <div class="title-bar">
+            <span class="window-title">Untitled - Text Editor</span>
+            <div class="window-controls">
+                <button class="control-button minimize">-</button>
+                <button class="control-button maximize">□</button>
+                <button class="control-button close">X</button>
+            </div>
+        </div>
+
+        <nav class="menu-bar">
+            <ul class="menu-list">
+                <li class="menu-item">
+                    File
+                    <ul class="dropdown-menu">
+                        <li>New</li>
+                        <li>Open...</li>
+                        <li>Save</li>
+                        <li>Save As...</li>
+                        <li class="separator"></li>
+                        <li>Page Setup...</li>
+                        <li>Print...</li>
+                        <li class="separator"></li>
+                        <li>Exit</li>
+                    </ul>
+                </li>
+                <li class="menu-item">
+                    Edit
+                    <ul class="dropdown-menu">
+                        <li>Undo</li>
+                        <li class="separator"></li>
+                        <li>Cut</li>
+                        <li>Copy</li>
+                        <li>Paste</li>
+                        <li>Delete</li>
+                        <li class="separator"></li>
+                        <li>Find...</li>
+                        <li>Find Next</li>
+                        <li>Replace...</li>
+                        <li>Go To...</li>
+                        <li class="separator"></li>
+                        <li>Select All</li>
+                        <li>Time/Date</li>
+                    </ul>
+                </li>
+                <li class="menu-item">
+                    Format
+                    <ul class="dropdown-menu">
+                        <li>Word Wrap</li>
+                        <li>Font...</li>
+                    </ul>
+                </li>
+                <li class="menu-item">
+                    View
+                    <ul class="dropdown-menu">
+                        <li>Toolbar</li>
+                        <li>Status Bar</li>
+                    </ul>
+                </li>
+                <li class="menu-item">
+                    Help
+                    <ul class="dropdown-menu">
+                        <li>View Help</li>
+                        <li class="separator"></li>
+                        <li>About Text Editor</li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+
+        <textarea class="text-editor" placeholder="Type your text here..."></textarea>
+
+        <div class="status-bar">
+            <span>Ln 1, Col 1</span>
+        </div>
+    </div>
+</body>
+</html>
