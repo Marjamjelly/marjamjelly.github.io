@@ -22,22 +22,11 @@
     <h4><i>20 September 2025</i></h4>
     <p>A new default page is implemented. Pages made before this addition will have a slightly different layout. I may update the old pages someday, but don't count on it. You can see a full list of changes on <a href="changelog.html">the changelog.</a></p>
     
-    <!-- Laptop Fund Bar-->
-    <div class="dollartimes-pb" style="font-family: arial; width: 300px; box-sizing: border-box; clear:both; float:right">
-      <div class="dollartimes-pb-title" style="font-size:16px; overflow: hidden;">Laptop Fund</div>
-      <div class="dollartimes-pb-frame" title="$109 / 44% towards goal" style="border-radius: 5px; background-color: #ffffff;padding: 0px;border: 1px solid #000; height: 30px; margin: 2px 0 1px;">
-        <div class="dollartimes-pb-fill" style="width:44%; height: 100%; margin-top: 0px; background: repeating-linear-gradient(-45deg, rgba(204,204,204,1), rgba(204,204,204,1) 8px, rgba(204,204,204,0.8) 8px, rgba(204,204,204,0.8) 16px);">&nbsp;</div>
-      </div>
-      <div>
-        <span class="dollartimes-pb-caption" style="float: left; font-size: 12px;">$0</span>
-        <span class="dollartimes-pb-caption" style="float: right; font-size: 12px;">$250</span>
-      </div>
-      <div style="clear: both;"></div>
-      <div style="margin: 2px 0 0 0; text-align: right;">
-        <a href="http://www.dollartimes.com/on-your-site/progress-bar?name=My%20Savings&start=0&goal=250&current=109&color=cccccc&unit=%24&unitposition=left&size=300" style="font-size: 10px;text-decoration:none;color:#bbb">get a progress bar at dollartimes.com</a>
-      </div>
+    <div style="float:right">
+      <h2>Current Time</h2>
+      <div class="clock"></div>
     </div>
-    
+
     <h2>Recent additions:</h2>
     <i>The most recent additions</i>
     <ul>
@@ -71,4 +60,15 @@
 at a screen resolution of 1024x1. Please enable your ad blockers, disable high-heat drying, and remove your device
 from Airplane Mode and set it to Boat Mode. For security reasons, please leave caps lock on while browsing.</footer>
   </body>
+
+  <script>
+    function updateClock() {
+      const now = new Date();
+      const time = now.toLocaleTimeString('en-US', { hour12: false });
+      const date = now.toLocaleDateString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      document.getElementById('clock').textContent = date + ' ' + time;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
 </html>
