@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Get Fucked</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24);
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .main-message {
+            font-size: clamp(4rem, 15vw, 12rem);
+            font-weight: bold;
+            text-shadow: 
+                0 0 20px rgba(255,255,255,0.8),
+                0 0 40px rgba(255,255,255,0.6),
+                0 0 60px rgba(255,255,255,0.4);
+            animation: pulse 2s ease-in-out infinite;
+            margin-bottom: 2rem;
+            transform: rotate(-5deg);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: rotate(-5deg) scale(1); }
+            50% { transform: rotate(-5deg) scale(1.1); }
+        }
+
+        .subtitle {
+            font-size: clamp(1.5rem, 4vw, 3rem);
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            animation: bounce 3s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .explanation {
+            font-size: clamp(1rem, 2.5vw, 1.5rem);
+            max-width: 600px;
+            margin-bottom: 3rem;
+            line-height: 1.6;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .home-button {
+            font-size: clamp(1rem, 2.5vw, 1.5rem);
+            padding: 15px 30px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border: 3px solid white;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .home-button:hover {
+            background: white;
+            color: #333;
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(255,255,255,0.8);
+        }
+
+        .floating-elements {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .floating-f {
+            position: absolute;
+            font-size: 3rem;
+            font-weight: bold;
+            opacity: 0.1;
+            animation: float 15s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            25% {
+                transform: translateY(-100px) rotate(90deg);
+            }
+            50% {
+                transform: translateY(-50px) rotate(180deg);
+            }
+            75% {
+                transform: translateY(-150px) rotate(270deg);
+            }
+        }
+
+        .floating-f:nth-child(1) { left: 10%; animation-delay: 0s; }
+        .floating-f:nth-child(2) { left: 80%; animation-delay: 2s; }
+        .floating-f:nth-child(3) { left: 60%; animation-delay: 4s; }
+        .floating-f:nth-child(4) { left: 20%; animation-delay: 6s; }
+        .floating-f:nth-child(5) { left: 90%; animation-delay: 8s; }
+
+        @media (max-width: 768px) {
+            .explanation {
+                padding: 0 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements">
+        <div class="floating-f">F</div>
+        <div class="floating-f">U</div>
+        <div class="floating-f">C</div>
+        <div class="floating-f">K</div>
+        <div class="floating-f">!</div>
+    </div>
+
+    <div class="main-message">FUCK YOU</div>
+    
+    <div class="subtitle">404: Page Not Found, Dipshit</div>
+    
+    <div class="explanation">
+        Well, well, well... look what we have here. You've managed to break the fucking internet. 
+        Congratulations, you absolute genius dipshit! The page you're looking for doesn't exist, 
+        probably never existed, and frankly, we're questioning every pathetic life choice that led 
+        your sorry ass to this moment of pure fucking failure.
+    </div>
+    
+    <a href="https://marjamjelly.github.io/not-index.html" class="home-button">Take Me Home (Please)</a>
+</body>
+</html>

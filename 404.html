@@ -3,157 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - Get Fucked</title>
+    <title>404 - Page Not Found</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         body {
-            font-family: 'Courier New', monospace;
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24);
-            background-size: 400% 400%;
-            animation: gradientShift 8s ease infinite;
-            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
             text-align: center;
-            overflow: hidden;
-        }
-
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .main-message {
-            font-size: clamp(4rem, 15vw, 12rem);
-            font-weight: bold;
-            text-shadow: 
-                0 0 20px rgba(255,255,255,0.8),
-                0 0 40px rgba(255,255,255,0.6),
-                0 0 60px rgba(255,255,255,0.4);
-            animation: pulse 2s ease-in-out infinite;
-            margin-bottom: 2rem;
-            transform: rotate(-5deg);
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: rotate(-5deg) scale(1); }
-            50% { transform: rotate(-5deg) scale(1.1); }
-        }
-
-        .subtitle {
-            font-size: clamp(1.5rem, 4vw, 3rem);
-            margin-bottom: 2rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            animation: bounce 3s ease-in-out infinite;
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .explanation {
-            font-size: clamp(1rem, 2.5vw, 1.5rem);
             max-width: 600px;
-            margin-bottom: 3rem;
+        }
+        
+        h1 {
+            font-size: 120px;
+            margin-bottom: 20px;
+            color: #ff6b6b;
+        }
+        
+        h2 {
+            font-size: 28px;
+            margin-bottom: 30px;
+        }
+        
+        .quote {
+            font-size: 20px;
+            font-style: italic;
+            margin: 40px 0;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 8px;
             line-height: 1.6;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
-
-        .home-button {
-            font-size: clamp(1rem, 2.5vw, 1.5rem);
-            padding: 15px 30px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
+        
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 30px;
+            background: #ff6b6b;
+            color: #fff;
             text-decoration: none;
-            border: 3px solid white;
-            border-radius: 50px;
-            transition: all 0.3s ease;
-            font-weight: bold;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-            backdrop-filter: blur(10px);
+            border-radius: 5px;
+            font-size: 16px;
+            transition: background 0.3s;
         }
-
-        .home-button:hover {
-            background: white;
-            color: #333;
-            transform: scale(1.1);
-            box-shadow: 0 0 30px rgba(255,255,255,0.8);
-        }
-
-        .floating-elements {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .floating-f {
-            position: absolute;
-            font-size: 3rem;
-            font-weight: bold;
-            opacity: 0.1;
-            animation: float 15s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0) rotate(0deg);
-            }
-            25% {
-                transform: translateY(-100px) rotate(90deg);
-            }
-            50% {
-                transform: translateY(-50px) rotate(180deg);
-            }
-            75% {
-                transform: translateY(-150px) rotate(270deg);
-            }
-        }
-
-        .floating-f:nth-child(1) { left: 10%; animation-delay: 0s; }
-        .floating-f:nth-child(2) { left: 80%; animation-delay: 2s; }
-        .floating-f:nth-child(3) { left: 60%; animation-delay: 4s; }
-        .floating-f:nth-child(4) { left: 20%; animation-delay: 6s; }
-        .floating-f:nth-child(5) { left: 90%; animation-delay: 8s; }
-
-        @media (max-width: 768px) {
-            .explanation {
-                padding: 0 20px;
-            }
+        
+        a:hover {
+            background: #ff5252;
         }
     </style>
 </head>
 <body>
-    <div class="floating-elements">
-        <div class="floating-f">F</div>
-        <div class="floating-f">U</div>
-        <div class="floating-f">C</div>
-        <div class="floating-f">K</div>
-        <div class="floating-f">!</div>
+    <div class="container">
+        <h1>404</h1>
+        <h2>Page Not Found</h2>
+        <div class="quote" id="quote"></div>
+        <a href="index.html">Go Home</a>
     </div>
 
-    <div class="main-message">FUCK YOU</div>
-    
-    <div class="subtitle">404: Page Not Found, Dipshit</div>
-    
-    <div class="explanation">
-        Well, well, well... look what we have here. You've managed to break the fucking internet. 
-        Congratulations, you absolute genius dipshit! The page you're looking for doesn't exist, 
-        probably never existed, and frankly, we're questioning every pathetic life choice that led 
-        your sorry ass to this moment of pure fucking failure.
-    </div>
-    
-    <a href="https://marjamjelly.github.io/not-index.html" class="home-button">Take Me Home (Please)</a>
+    <script>
+        const quotes = [
+            "\"I have gotten my neighbors cat pregnant 4 times. He still thinks hes the one doing it.\"",
+            "\"I have been using the drop ceiling above my Political Science classroom as a sperm bank. I have 16 liters so far.\"",
+            "\"Goat cheese makes the best condom lube. Prove me wrong.\"",
+            "\"I've been catfishing my mother for 7 months now. The nudes she sends are better than I ever could have imagined.\"",
+            "\"I have a life ban from Chuck E. Cheese for using the balls in the ball pit as anal beads\""
+        ];
+
+        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+        document.getElementById('quote').textContent = randomQuote;
+    </script>
 </body>
 </html>
