@@ -4,9 +4,146 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Untitled - Text Editor</title>
-    <!-- updated to point at the provided styles file -->
     <link rel="stylesheet" href="../css/retro.css">
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <style>
+        /* Lightweight modal/dialog styles that follow the retro look (keeps external CSS untouched) */
+        :root {
+            --modal-bg: rgba(0,0,0,0.6);
+            --dialog-bg: #f6f2e8;
+            --dialog-border: #222;
+            --accent: #222;
+            --btn-bg: #222;
+            --btn-fg: #fff;
+            --input-bg: #fff;
+            --input-border: #222;
+            --dialog-font: 'VT323', monospace;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: var(--modal-bg);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9998;
+        }
+        .modal-backdrop.active { display: flex; }
+
+        .dialog {
+            background: var(--dialog-bg);
+            border: 3px solid var(--dialog-border);
+            padding: 14px;
+            min-width: 320px;
+            max-width: 90%;
+            box-shadow: 6px 6px 0 rgba(0,0,0,0.2);
+            font-family: var(--dialog-font);
+            color: #111;
+            z-index: 9999;
+        }
+
+        .dialog .dialog-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+
+        .dialog .dialog-body { margin-bottom:10px; white-space:normal; }
+
+        .dialog .dialog-controls {
+            display:flex;
+            gap:8px;
+            justify-content:flex-end;
+            flex-wrap:wrap;
+        }
+
+        .btn {
+            background: var(--btn-bg);
+            color: var(--btn-fg);
+            border: 2px solid var(--btn-fg);
+            padding: 6px 10px;
+            cursor: pointer;
+            font-family: var(--dialog-font);
+        }
+
+        .btn.ghost {
+            background: transparent;
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .dialog input[type="text"], .dialog input[type="number"], .dialog select, .dialog textarea {
+            width: 100%;
+            padding: 6px;
+            background: var(--input-bg);
+            border: 2px solid var(--input-border);
+            box-sizing: border-box;
+            font-family: var(--dialog-font);
+            font-size: 16px;
+        }
+
+        .flex-row { display:flex; gap:8px; align-items:center; }
+        .flex-col { display:flex; flex-direction:column; gap:6px; }
+
+        /* small helpers for find/replace panel inside UI */
+        .find-panel { display:flex; gap:8px; align-items:center; }
+        .small-btn { padding:4px 8px; font-size:14px; }
+
+        /* Line number gutter */
+        .editor-wrapper {
+            position: relative;
+            display: flex;
+            width: 100%;
+            box-sizing: border-box;
+            height: 400px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+        .gutter {
+            width: 48px;
+            background: #efefef;
+            border-right: 1px solid #ccc;
+            padding: 8px 6px;
+            box-sizing: border-box;
+            font-family: 'VT323', monospace;
+            font-size: 14px;
+            color: #444;
+            overflow: hidden;
+            text-align: right;
+            user-select: none;
+        }
+        .gutter pre {
+            margin: 0;
+            line-height: 1.35;
+            white-space: pre;
+        }
+        .text-area-wrap {
+            flex: 1;
+            position: relative;
+        }
+        .text-editor {
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            padding: 8px 12px;
+            resize: none;
+            border: none;
+            outline: none;
+            font-family: 'VT323', monospace;
+            font-size: 16px;
+            line-height: 1.35;
+        }
+
+        /* Make sure the retro CSS still applies first; these are minimal helpers */
+        @media print {
+            /* print styles will be applied dynamically for page setup when printing */
+            body * { visibility: hidden; }
+            #print-content, #print-content * { visibility: visible; }
+            #print-content { position: absolute; left: 0; top: 0; width: 100%; }
+        }
+    </style>
 </head>
 <body>
     <div class="editor-window">
@@ -99,11 +236,13 @@
     <input type="file" id="fileInput" accept=".txt,text/plain" style="display:none" />
 
     <!-- Generic modal backdrop used for custom alerts, confirms, prompts and more complex dialogs -->
-    <div id="modalBackdrop" class="modal-backdrop" aria-hidden="true"></div>
+    <div id="modalBackdrop" class="modal-backdrop" aria-hidden="true">
+        <!-- dialog content will be injected dynamically -->
+    </div>
 
     <!-- Find / Replace panel (non-blocking) -->
-    <div id="findPanel" class="find-panel-wrap">
-        <div class="dialog find-panel">
+    <div id="findPanel" style="display:none; position: fixed; right: 12px; top: 76px; z-index: 9999;">
+        <div class="dialog" style="min-width:360px;">
             <div class="dialog-title">Find / Replace
                 <button class="btn ghost" id="closeFind" title="Close">×</button>
             </div>
@@ -130,13 +269,11 @@
         </div>
     </div>
 
+    <!-- Page Setup dialog template will be created by JS when requested -->
+
     <script>
     (function () {
-        // The JS is the same as the previously-working feature-rich implementation.
-        // It relies on modal/dialog CSS classes defined in text_editor_styles.css.
-        // For brevity I keep the full working logic below (find/replace, File System Access,
-        // custom modal functions) — identical behavior to the version we tested earlier.
-
+        // Elements
         const editor = document.getElementById('editor');
         const gutter = document.getElementById('gutter');
         const fileInput = document.getElementById('fileInput');
@@ -146,6 +283,7 @@
         const statusExtras = document.getElementById('statusExtras');
         const modalBackdrop = document.getElementById('modalBackdrop');
 
+        // state
         let currentFilename = 'Untitled';
         let currentFileHandle = null;
         let lastFind = { term: '', index: 0, opts: {} };
@@ -155,14 +293,18 @@
         let pageSetup = {
             orientation: 'portrait',
             paper: 'A4',
-            marginTop: 20, marginRight: 20, marginBottom: 20, marginLeft: 20,
+            marginTop: 20, marginRight: 20, marginBottom: 20, marginLeft: 20, // mm-ish for preview
         };
 
+        // init
         updateTitle();
         updatePosition();
         updateGutter();
 
-        /* ---------- Custom dialog system ---------- */
+        // -----------------------
+        // Utility: custom modal
+        // Promise-based small dialog system: alert, confirm, prompt, and custom
+        // -----------------------
         function showDialog({ title = '', html = '', inputs = [], buttons = [{ label: 'OK', value: true }], closeOnBackdrop = false } = {}) {
             return new Promise((resolve) => {
                 modalBackdrop.innerHTML = '';
@@ -243,6 +385,7 @@
                 }
 
                 modalBackdrop.appendChild(dialog);
+                // focus first input if any
                 setTimeout(() => {
                     const first = dialog.querySelector('input, textarea, select, button');
                     if (first) first.focus();
@@ -253,6 +396,7 @@
         async function showAlert(message, title = 'Notice') {
             await showDialog({ title, html: `<div>${escapeHtml(message)}</div>`, buttons: [{ label: 'OK', value: true }] });
         }
+
         async function showConfirm(message, title = 'Confirm') {
             const res = await showDialog({
                 title,
@@ -261,6 +405,7 @@
             });
             return !!res.value;
         }
+
         async function showPrompt(message, defaultValue = '', title = 'Input') {
             const res = await showDialog({
                 title,
@@ -271,6 +416,9 @@
             return res.inputs && res.inputs.value != null ? res.inputs.value : null;
         }
 
+        // -----------------------
+        // Helpers
+        // -----------------------
         function escapeHtml(s) {
             if (typeof s !== 'string') return s;
             return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -307,10 +455,18 @@
                     if (currentFileHandle && currentFileHandle.createWritable) {
                         await saveToHandle(currentFileHandle).catch(()=>{});
                     } else {
+                        // fallback: save to localStorage as draft
                         try { localStorage.setItem('texteditor.autosave', editor.value); } catch(e){}
                     }
                 }, 5000);
             }
+        }
+
+        // -----------------------
+        // File API (File System Access + fallbacks)
+        // -----------------------
+        async function supportsFileSystemAccess() {
+            return ('showOpenFilePicker' in window) && ('showSaveFilePicker' in window);
         }
 
         async function saveToHandle(handle) {
@@ -318,6 +474,7 @@
                 if (handle.requestPermission) {
                     const perm = await handle.requestPermission({ mode: 'readwrite' });
                     if (perm !== 'granted') {
+                        // try queryPermission
                         if (typeof handle.queryPermission === 'function') {
                             const q = await handle.queryPermission({ mode:'readwrite' });
                             if (q !== 'granted') {
@@ -352,7 +509,9 @@
             URL.revokeObjectURL(url);
         }
 
-        /* ---------- Menu actions (as before) ---------- */
+        // -----------------------
+        // Menu actions
+        // -----------------------
         async function doNew() {
             if (editor.value) {
                 const ok = await showConfirm('Discard current changes and create a new file?');
@@ -367,6 +526,7 @@
         }
 
         async function doOpen() {
+            // prefer File System Access
             if ('showOpenFilePicker' in window) {
                 try {
                     const [handle] = await window.showOpenFilePicker({
@@ -383,9 +543,12 @@
                     updateGutter();
                     return;
                 } catch (err) {
+                    // cancelled or not allowed - fall through to input fallback
                     console.debug('Open canceled or failed', err);
                 }
             }
+
+            // fallback: file input
             fileInput.value = '';
             fileInput.click();
         }
@@ -406,6 +569,7 @@
         });
 
         async function doSave() {
+            // if we have writeable handle, write back
             if (currentFileHandle && currentFileHandle.createWritable) {
                 const ok = await saveToHandle(currentFileHandle);
                 if (ok) {
@@ -416,6 +580,7 @@
                 }
             }
 
+            // offer Save As via picker if available
             if ('showSaveFilePicker' in window) {
                 try {
                     const handle = await window.showSaveFilePicker({
@@ -435,6 +600,7 @@
                 }
             }
 
+            // fallback: prompt for filename if Untitled
             if (!currentFilename || currentFilename === 'Untitled') {
                 const name = await showPrompt('Save as (enter file name):', 'Untitled.txt');
                 if (!name) return;
@@ -467,6 +633,7 @@
                     console.debug('SaveAs canceled or failed', err);
                 }
             }
+
             const name = await showPrompt('Save as (enter file name):', currentFilename || 'Untitled.txt');
             if (!name) return;
             currentFilename = name.includes('.') ? name : (name + '.txt');
@@ -476,6 +643,7 @@
         }
 
         function preparePrintStyles() {
+            // Create a print stylesheet using pageSetup values
             const css = `
                 @page {
                     size: ${pageSetup.orientation === 'portrait' ? 'portrait' : 'landscape'};
@@ -492,6 +660,7 @@
         }
 
         function doPrint() {
+            // Build printable content and include pageSetup CSS
             const printWin = window.open('', '_blank');
             if (!printWin) {
                 showAlert('Unable to open print window (pop-ups blocked).');
@@ -502,6 +671,7 @@
             printWin.document.write('<!doctype html><html><head><meta charset="utf-8">' + style + '</head><body>' + content + '</body></html>');
             printWin.document.close();
             printWin.focus();
+            // small delay to allow resources to load
             setTimeout(()=> printWin.print(), 300);
         }
 
@@ -511,6 +681,9 @@
             try { window.close(); } catch (e) { showAlert('Unable to close the window programmatically.'); }
         }
 
+        // -----------------------
+        // Edit actions
+        // -----------------------
         function doUndo() { document.execCommand('undo'); }
         function doCut() { editor.focus(); document.execCommand('cut'); }
         function doCopy() { editor.focus(); document.execCommand('copy'); }
@@ -521,7 +694,6 @@
                 document.execCommand('paste');
             }
         }
-
         function doDelete() {
             const s = getSelectionRange();
             if (s.start === s.end) {
@@ -536,7 +708,7 @@
             updateGutter();
         }
 
-        // Find/Replace panel wiring
+        // Find/Replace implemented using the find panel above (non-blocking)
         const findPanel = document.getElementById('findPanel');
         const findTermEl = document.getElementById('findTerm');
         const replaceTermEl = document.getElementById('replaceTerm');
@@ -574,6 +746,7 @@
                 editor.setSelectionRange(m.index, m.index + m[0].length);
                 updatePosition();
             } else {
+                // reverse search - scan from start to selectionStart
                 const upto = text.slice(0, editor.selectionStart);
                 let match, last = null;
                 while ((match = re.exec(upto)) !== null) last = match;
@@ -689,6 +862,7 @@
             showAlert('Text Editor — Retro demo\nFeatures: Open/Save (including File System Access when supported), Find/Replace, Page Setup/Print, Autosave, Line Numbers.');
         }
 
+        // Page Setup dialog builder
         async function doPageSetup() {
             const res = await showDialog({
                 title: 'Page Setup',
@@ -717,6 +891,9 @@
             }
         }
 
+        // -----------------------
+        // Selection / insertion helpers
+        // -----------------------
         function insertAtCursor(text) {
             const s = getSelectionRange();
             const before = editor.value.slice(0, s.start);
@@ -733,6 +910,9 @@
             return { start: editor.selectionStart, end: editor.selectionEnd };
         }
 
+        // -----------------------
+        // Central menu dispatcher
+        // -----------------------
         document.addEventListener('click', async (e) => {
             const li = e.target.closest('.dropdown-menu li');
             if (!li || li.classList.contains('separator')) return;
@@ -775,11 +955,19 @@
             }
         });
 
+        // -----------------------
+        // Editor events
+        // -----------------------
         editor.addEventListener('input', () => { updatePosition(); updateGutter(); });
         editor.addEventListener('click', updatePosition);
         editor.addEventListener('keyup', updatePosition);
-        editor.addEventListener('scroll', () => { gutter.scrollTop = editor.scrollTop; });
+        editor.addEventListener('scroll', () => {
+            // keep gutter in sync if needed
+            const scrollTop = editor.scrollTop;
+            gutter.scrollTop = scrollTop;
+        });
 
+        // keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
                 switch (e.key.toLowerCase()) {
@@ -791,14 +979,17 @@
                     case 'a': if (document.activeElement === editor) { /* keep native */ } break;
                 }
             }
+            // Close find panel with Esc
             if (e.key === 'Escape') {
                 if (findPanel.style.display === 'block') findPanel.style.display = 'none';
             }
         });
 
+        // Restore autosave draft if present (only for fallback mode)
         try {
             const draft = localStorage.getItem('texteditor.autosave');
             if (draft) {
+                // ask user whether to restore
                 (async () => {
                     const ok = await showConfirm('A locally saved draft was found. Restore it?');
                     if (ok) {
@@ -810,6 +1001,7 @@
             }
         } catch (e) {}
 
+        // Expose small debug helper (not necessary)
         window._textEditor = {
             getState: () => ({ filename: currentFilename, hasHandle: !!currentFileHandle })
         };
