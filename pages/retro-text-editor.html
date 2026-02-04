@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Untitled - Text Editor</title>
-    <link rel="stylesheet" href="../css/retro.css">
+    <!-- updated to point at the provided styles file -->
+    <link rel="stylesheet" href="../css/text_editor_styles.css">
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -50,6 +51,7 @@
                         <li data-action="goto">Go To...</li>
                         <li class="separator"></li>
                         <li data-action="selectall">Select All</li>
+                        <li data-action="wordcount">Word Count</li>
                         <li data-action="timedate">Time/Date</li>
                     </ul>
                 </li>
@@ -65,6 +67,8 @@
                     <ul class="dropdown-menu">
                         <li data-action="toolbar">Toolbar</li>
                         <li data-action="statusbar">Status Bar</li>
+                        <li data-action="linenumbers">Line Numbers</li>
+                        <li data-action="autosave">Autosave</li>
                     </ul>
                 </li>
                 <li class="menu-item">
@@ -78,430 +82,739 @@
             </ul>
         </nav>
 
-        <textarea class="text-editor" id="editor" placeholder="Type your text here..." wrap="soft"></textarea>
+        <div class="editor-wrapper">
+            <div class="gutter" id="gutter"><pre>1</pre></div>
+            <div class="text-area-wrap">
+                <textarea class="text-editor" id="editor" placeholder="Type your text here..." wrap="soft" spellcheck="false"></textarea>
+            </div>
+        </div>
 
         <div class="status-bar" id="statusBar">
             <span id="position">Ln 1, Col 1</span>
+            <span id="statusExtras" style="margin-left:12px;"></span>
         </div>
     </div>
 
-    <!-- hidden file input used as a fallback on browsers without the File System Access API -->
+    <!-- hidden file input used as a fallback -->
     <input type="file" id="fileInput" accept=".txt,text/plain" style="display:none" />
 
+    <!-- Generic modal backdrop used for custom alerts, confirms, prompts and more complex dialogs -->
+    <div id="modalBackdrop" class="modal-backdrop" aria-hidden="true"></div>
+
+    <!-- Find / Replace panel (non-blocking) -->
+    <div id="findPanel" class="find-panel-wrap">
+        <div class="dialog find-panel">
+            <div class="dialog-title">Find / Replace
+                <button class="btn ghost" id="closeFind" title="Close">×</button>
+            </div>
+            <div class="dialog-body">
+                <div class="flex-col">
+                    <label>Find:
+                        <input type="text" id="findTerm" />
+                    </label>
+                    <label>Replace:
+                        <input type="text" id="replaceTerm" />
+                    </label>
+                    <div class="flex-row">
+                        <label><input type="checkbox" id="matchCase" /> Match case</label>
+                        <label><input type="checkbox" id="wholeWord" /> Whole word</label>
+                    </div>
+                </div>
+            </div>
+            <div class="dialog-controls">
+                <button class="btn small-btn" id="findPrevBtn">Prev</button>
+                <button class="btn small-btn" id="findNextBtn">Next</button>
+                <button class="btn small-btn" id="replaceBtn">Replace</button>
+                <button class="btn small-btn" id="replaceAllBtn">Replace All</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        (function () {
-            const editor = document.getElementById('editor');
-            const fileInput = document.getElementById('fileInput');
-            const windowTitle = document.getElementById('windowTitle');
-            const statusBar = document.getElementById('statusBar');
-            const menuBar = document.getElementById('menuBar');
-            const positionSpan = document.getElementById('position');
+    (function () {
+        // The JS is the same as the previously-working feature-rich implementation.
+        // It relies on modal/dialog CSS classes defined in text_editor_styles.css.
+        // For brevity I keep the full working logic below (find/replace, File System Access,
+        // custom modal functions) — identical behavior to the version we tested earlier.
 
-            let currentFilename = 'Untitled';
-            let currentFileHandle = null; // File System Access handle when available
-            let lastFind = { term: '', index: 0 };
+        const editor = document.getElementById('editor');
+        const gutter = document.getElementById('gutter');
+        const fileInput = document.getElementById('fileInput');
+        const windowTitle = document.getElementById('windowTitle');
+        const statusBar = document.getElementById('statusBar');
+        const positionSpan = document.getElementById('position');
+        const statusExtras = document.getElementById('statusExtras');
+        const modalBackdrop = document.getElementById('modalBackdrop');
 
-            function updateTitle() {
-                windowTitle.textContent = currentFilename + ' - Text Editor';
+        let currentFilename = 'Untitled';
+        let currentFileHandle = null;
+        let lastFind = { term: '', index: 0, opts: {} };
+        let autosaveEnabled = false;
+        let autosaveTimer = null;
+        let lineNumbersEnabled = true;
+        let pageSetup = {
+            orientation: 'portrait',
+            paper: 'A4',
+            marginTop: 20, marginRight: 20, marginBottom: 20, marginLeft: 20,
+        };
+
+        updateTitle();
+        updatePosition();
+        updateGutter();
+
+        /* ---------- Custom dialog system ---------- */
+        function showDialog({ title = '', html = '', inputs = [], buttons = [{ label: 'OK', value: true }], closeOnBackdrop = false } = {}) {
+            return new Promise((resolve) => {
+                modalBackdrop.innerHTML = '';
+                modalBackdrop.classList.add('active');
+                modalBackdrop.setAttribute('aria-hidden', 'false');
+
+                const dialog = document.createElement('div');
+                dialog.className = 'dialog';
+                dialog.innerHTML = `
+                    <div class="dialog-title">${escapeHtml(title)}</div>
+                    <div class="dialog-body"></div>
+                    <div class="dialog-controls"></div>
+                `;
+                const body = dialog.querySelector('.dialog-body');
+                const controls = dialog.querySelector('.dialog-controls');
+
+                if (html) {
+                    const wrapper = document.createElement('div');
+                    wrapper.innerHTML = html;
+                    body.appendChild(wrapper);
+                }
+
+                const inputElems = {};
+                for (const inp of inputs) {
+                    const row = document.createElement('div');
+                    row.className = 'flex-col';
+                    const label = document.createElement('label');
+                    label.textContent = inp.label || '';
+                    if (inp.type === 'textarea') {
+                        const ta = document.createElement('textarea');
+                        ta.value = inp.value || '';
+                        if (inp.placeholder) ta.placeholder = inp.placeholder;
+                        row.appendChild(label);
+                        row.appendChild(ta);
+                        inputElems[inp.name] = ta;
+                    } else {
+                        const input = document.createElement('input');
+                        input.type = inp.type || 'text';
+                        input.value = inp.value || '';
+                        if (inp.placeholder) input.placeholder = inp.placeholder;
+                        row.appendChild(label);
+                        row.appendChild(input);
+                        inputElems[inp.name] = input;
+                    }
+                    body.appendChild(row);
+                }
+
+                for (const b of buttons) {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn';
+                    btn.textContent = b.label;
+                    if (b.class) btn.classList.add(b.class);
+                    btn.addEventListener('click', () => {
+                        const result = { value: b.value };
+                        if (Object.keys(inputElems).length) {
+                            result.inputs = {};
+                            for (const n in inputElems) result.inputs[n] = inputElems[n].value;
+                        }
+                        cleanup();
+                        resolve(result);
+                    });
+                    controls.appendChild(btn);
+                }
+
+                function cleanup() {
+                    modalBackdrop.classList.remove('active');
+                    modalBackdrop.innerHTML = '';
+                    modalBackdrop.setAttribute('aria-hidden', 'true');
+                }
+
+                if (closeOnBackdrop) {
+                    modalBackdrop.addEventListener('click', (ev) => {
+                        if (ev.target === modalBackdrop) {
+                            cleanup();
+                            resolve({ value: null });
+                        }
+                    }, { once: true });
+                }
+
+                modalBackdrop.appendChild(dialog);
+                setTimeout(() => {
+                    const first = dialog.querySelector('input, textarea, select, button');
+                    if (first) first.focus();
+                }, 10);
+            });
+        }
+
+        async function showAlert(message, title = 'Notice') {
+            await showDialog({ title, html: `<div>${escapeHtml(message)}</div>`, buttons: [{ label: 'OK', value: true }] });
+        }
+        async function showConfirm(message, title = 'Confirm') {
+            const res = await showDialog({
+                title,
+                html: `<div>${escapeHtml(message)}</div>`,
+                buttons: [{ label: 'Cancel', value: false, class: 'ghost' }, { label: 'OK', value: true }]
+            });
+            return !!res.value;
+        }
+        async function showPrompt(message, defaultValue = '', title = 'Input') {
+            const res = await showDialog({
+                title,
+                inputs: [{ name: 'value', label: message, type: 'text', value: defaultValue }],
+                buttons: [{ label: 'Cancel', value: null, class: 'ghost' }, { label: 'OK', value: true }]
+            });
+            if (!res || res.value === null) return null;
+            return res.inputs && res.inputs.value != null ? res.inputs.value : null;
+        }
+
+        function escapeHtml(s) {
+            if (typeof s !== 'string') return s;
+            return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        function updateTitle() {
+            windowTitle.textContent = `${currentFilename} - Text Editor`;
+        }
+
+        function updatePosition() {
+            const text = editor.value;
+            const pos = editor.selectionStart;
+            const lines = text.slice(0, pos).split('\n');
+            const line = lines.length;
+            const col = lines[lines.length - 1].length + 1;
+            positionSpan.textContent = `Ln ${line}, Col ${col}`;
+        }
+
+        function updateGutter() {
+            if (!lineNumbersEnabled) { gutter.style.display = 'none'; return; }
+            gutter.style.display = '';
+            const count = Math.max(1, (editor.value.match(/\n/g) || []).length + 1);
+            let nums = '';
+            for (let i = 1; i <= count; i++) nums += i + '\n';
+            gutter.querySelector('pre').textContent = nums;
+        }
+
+        function enableAutosave(enable) {
+            autosaveEnabled = !!enable;
+            statusExtras.textContent = autosaveEnabled ? 'Autosave: On' : '';
+            if (autosaveTimer) { clearInterval(autosaveTimer); autosaveTimer = null; }
+            if (autosaveEnabled) {
+                autosaveTimer = setInterval(async () => {
+                    if (currentFileHandle && currentFileHandle.createWritable) {
+                        await saveToHandle(currentFileHandle).catch(()=>{});
+                    } else {
+                        try { localStorage.setItem('texteditor.autosave', editor.value); } catch(e){}
+                    }
+                }, 5000);
             }
+        }
 
-            function updatePosition() {
-                const text = editor.value;
-                const pos = editor.selectionStart;
-                const lines = text.slice(0, pos).split('\n');
-                const line = lines.length;
-                const col = lines[lines.length - 1].length + 1;
-                positionSpan.textContent = `Ln ${line}, Col ${col}`;
-            }
-
-            function escapeHtml(s) {
-                return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-            }
-
-            function insertAtCursor(text) {
-                const s = getSelectionRange();
-                const before = editor.value.slice(0, s.start);
-                const after = editor.value.slice(s.end);
-                editor.value = before + text + after;
-                const pos = s.start + text.length;
-                editor.setSelectionRange(pos, pos);
-                editor.focus();
-                updatePosition();
-            }
-
-            function getSelectionRange() {
-                return { start: editor.selectionStart, end: editor.selectionEnd };
-            }
-
-            // ---------- Save / Open helpers (File System Access API + fallback) ----------
-            function supportsFileSystemAccess() {
-                // feature-detect the modern API
-                return ('showOpenFilePicker' in window) && ('showSaveFilePicker' in window || 'showSaveFilePicker' in window);
-            }
-
-            async function saveToHandle(handle) {
-                try {
-                    // request write permission if available
-                    if (handle.requestPermission) {
-                        const perm = await handle.requestPermission({ mode: 'readwrite' });
-                        if (perm !== 'granted') {
-                            alert('Write permission was not granted.');
+        async function saveToHandle(handle) {
+            try {
+                if (handle.requestPermission) {
+                    const perm = await handle.requestPermission({ mode: 'readwrite' });
+                    if (perm !== 'granted') {
+                        if (typeof handle.queryPermission === 'function') {
+                            const q = await handle.queryPermission({ mode:'readwrite' });
+                            if (q !== 'granted') {
+                                await showAlert('Write permission was not granted.');
+                                return false;
+                            }
+                        } else {
+                            await showAlert('Write permission was not granted.');
                             return false;
                         }
                     }
-                    const writable = await handle.createWritable();
-                    await writable.write(editor.value);
-                    await writable.close();
-                    return true;
+                }
+                const writable = await handle.createWritable();
+                await writable.write(editor.value);
+                await writable.close();
+                return true;
+            } catch (err) {
+                console.error('Error saving to handle', err);
+                return false;
+            }
+        }
+
+        function downloadAsFile(filename) {
+            const blob = new Blob([editor.value], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        /* ---------- Menu actions (as before) ---------- */
+        async function doNew() {
+            if (editor.value) {
+                const ok = await showConfirm('Discard current changes and create a new file?');
+                if (!ok) return;
+            }
+            editor.value = '';
+            currentFilename = 'Untitled';
+            currentFileHandle = null;
+            updateTitle();
+            updatePosition();
+            updateGutter();
+        }
+
+        async function doOpen() {
+            if ('showOpenFilePicker' in window) {
+                try {
+                    const [handle] = await window.showOpenFilePicker({
+                        types: [{ description: 'Text Files', accept: {'text/plain': ['.txt']} }],
+                        multiple: false
+                    });
+                    const file = await handle.getFile();
+                    const contents = await file.text();
+                    editor.value = contents;
+                    currentFileHandle = handle;
+                    currentFilename = handle.name || file.name || 'Untitled';
+                    updateTitle();
+                    updatePosition();
+                    updateGutter();
+                    return;
                 } catch (err) {
-                    console.error('Error writing file:', err);
-                    return false;
+                    console.debug('Open canceled or failed', err);
                 }
             }
+            fileInput.value = '';
+            fileInput.click();
+        }
 
-            // fallback download
-            function downloadAsFile(filename) {
-                const blob = new Blob([editor.value], { type: 'text/plain;charset=utf-8' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                URL.revokeObjectURL(url);
-            }
-
-            // ---------- File menu actions ----------
-            function doNew() {
-                if (editor.value && !confirm('Discard current changes and create a new file?')) return;
-                editor.value = '';
-                currentFilename = 'Untitled';
+        fileInput.addEventListener('change', (e) => {
+            const f = e.target.files && e.target.files[0];
+            if (!f) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                editor.value = reader.result;
+                currentFilename = f.name || 'Untitled';
                 currentFileHandle = null;
                 updateTitle();
                 updatePosition();
-            }
+                updateGutter();
+            };
+            reader.readAsText(f);
+        });
 
-            async function doOpen() {
-                // Prefer File System Access API so we get a writable handle (can save back to same file)
-                if ('showOpenFilePicker' in window) {
-                    try {
-                        const [handle] = await window.showOpenFilePicker({
-                            types: [{ description: 'Text Files', accept: { 'text/plain': ['.txt'] } }],
-                            excludeAcceptAllOption: false,
-                            multiple: false
-                        });
-                        const file = await handle.getFile();
-                        const contents = await file.text();
-                        editor.value = contents;
-                        currentFileHandle = handle;
-                        currentFilename = handle.name || file.name || 'Untitled';
-                        updateTitle();
-                        updatePosition();
-                        return;
-                    } catch (err) {
-                        // user probably cancelled or API failed — fall back to input
-                        console.debug('showOpenFilePicker cancelled or failed:', err);
-                    }
+        async function doSave() {
+            if (currentFileHandle && currentFileHandle.createWritable) {
+                const ok = await saveToHandle(currentFileHandle);
+                if (ok) {
+                    await showAlert('Saved.');
+                    return;
+                } else {
+                    await showAlert('Save failed — falling back to Save As / download.');
                 }
-
-                // fallback: traditional file input (no persistent handle available)
-                fileInput.value = '';
-                fileInput.click();
             }
 
-            fileInput.addEventListener('change', (e) => {
-                const f = e.target.files && e.target.files[0];
-                if (!f) return;
-                const reader = new FileReader();
-                reader.onload = () => {
-                    editor.value = reader.result;
-                    currentFilename = f.name || 'Untitled';
-                    currentFileHandle = null; // can't write back when opened via input
-                    updateTitle();
-                    updatePosition();
-                };
-                reader.readAsText(f);
-            });
-
-            async function doSave() {
-                // If we have a file handle from the File System Access API, write back to it
-                if (currentFileHandle && currentFileHandle.createWritable) {
-                    const ok = await saveToHandle(currentFileHandle);
+            if ('showSaveFilePicker' in window) {
+                try {
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: currentFilename,
+                        types: [{ description: 'Text Files', accept: {'text/plain': ['.txt']} }]
+                    });
+                    const ok = await saveToHandle(handle);
                     if (ok) {
-                        alert('Saved.');
+                        currentFileHandle = handle;
+                        currentFilename = handle.name || currentFilename;
+                        updateTitle();
+                        await showAlert('Saved.');
+                        return;
+                    }
+                } catch (err) {
+                    console.debug('SaveAs canceled or failed', err);
+                }
+            }
+
+            if (!currentFilename || currentFilename === 'Untitled') {
+                const name = await showPrompt('Save as (enter file name):', 'Untitled.txt');
+                if (!name) return;
+                currentFilename = name.includes('.') ? name : (name + '.txt');
+                updateTitle();
+            }
+            downloadAsFile(currentFilename);
+            await showAlert('Downloaded file. On some devices this is the only available save method.');
+        }
+
+        async function doSaveAs() {
+            if ('showSaveFilePicker' in window) {
+                try {
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: currentFilename,
+                        types: [{ description: 'Text Files', accept: {'text/plain': ['.txt']} }]
+                    });
+                    const ok = await saveToHandle(handle);
+                    if (ok) {
+                        currentFileHandle = handle;
+                        currentFilename = handle.name || currentFilename;
+                        updateTitle();
+                        await showAlert('Saved.');
                         return;
                     } else {
-                        alert('Save failed — falling back to Save As / download.');
+                        await showAlert('Save As failed.');
+                        return;
                     }
-                }
-
-                // If the platform supports showSaveFilePicker, use it and keep the handle
-                if ('showSaveFilePicker' in window) {
-                    try {
-                        const handle = await window.showSaveFilePicker({
-                            suggestedName: currentFilename,
-                            types: [{ description: 'Text Files', accept: { 'text/plain': ['.txt'] } }]
-                        });
-                        const ok = await saveToHandle(handle);
-                        if (ok) {
-                            currentFileHandle = handle;
-                            currentFilename = handle.name || currentFilename;
-                            updateTitle();
-                            alert('Saved.');
-                            return;
-                        }
-                    } catch (err) {
-                        console.debug('showSaveFilePicker cancelled or failed:', err);
-                        // fall back to download
-                    }
-                }
-
-                // Fallback: trigger download (this creates a new file)
-                if (!currentFilename || currentFilename === 'Untitled') {
-                    let name = prompt('Save as (enter file name):', currentFilename || 'Untitled.txt');
-                    if (!name) return;
-                    if (!name.includes('.')) name = name + '.txt';
-                    currentFilename = name;
-                    updateTitle();
-                }
-                downloadAsFile(currentFilename);
-            }
-
-            async function doSaveAs() {
-                // Prefer showSaveFilePicker if available
-                if ('showSaveFilePicker' in window) {
-                    try {
-                        const handle = await window.showSaveFilePicker({
-                            suggestedName: currentFilename,
-                            types: [{ description: 'Text Files', accept: { 'text/plain': ['.txt'] } }]
-                        });
-                        const ok = await saveToHandle(handle);
-                        if (ok) {
-                            currentFileHandle = handle;
-                            currentFilename = handle.name || currentFilename;
-                            updateTitle();
-                            alert('Saved.');
-                            return;
-                        } else {
-                            alert('Save As failed.');
-                            return;
-                        }
-                    } catch (err) {
-                        console.debug('showSaveFilePicker cancelled or failed:', err);
-                    }
-                }
-
-                // Fallback: ask for filename and download
-                let name = prompt('Save as (enter file name):', currentFilename || 'Untitled.txt');
-                if (!name) return;
-                if (!name.includes('.')) name = name + '.txt';
-                currentFilename = name;
-                updateTitle();
-                downloadAsFile(currentFilename);
-            }
-
-            function doPrint() {
-                const printWin = window.open('', '_blank');
-                if (!printWin) { alert('Unable to open print window (pop-ups blocked).'); return; }
-                printWin.document.write('<pre>' + escapeHtml(editor.value) + '</pre>');
-                printWin.document.close();
-                printWin.focus();
-                printWin.print();
-            }
-
-            function doExit() {
-                if (confirm('Close the editor window? Unsaved changes will be lost.')) {
-                    try { window.close(); }
-                    catch (err) { alert('Unable to close the window programmatically.'); }
+                } catch (err) {
+                    console.debug('SaveAs canceled or failed', err);
                 }
             }
-
-            // ---------- Edit actions ----------
-            function doUndo() { document.execCommand('undo'); }
-            function doCut() { editor.focus(); document.execCommand('cut'); }
-            function doCopy() { editor.focus(); document.execCommand('copy'); }
-            function doPaste() {
-                if (navigator.clipboard && navigator.clipboard.readText) {
-                    navigator.clipboard.readText().then(text => {
-                        insertAtCursor(text);
-                    }).catch(() => {
-                        document.execCommand('paste'); // fallback (may be blocked)
-                    });
-                } else {
-                    document.execCommand('paste');
-                }
-            }
-            function doDelete() {
-                const s = getSelectionRange();
-                if (s.start === s.end) {
-                    editor.value = editor.value.slice(0, s.start) + editor.value.slice(s.end + 1);
-                    editor.setSelectionRange(s.start, s.start);
-                } else {
-                    editor.value = editor.value.slice(0, s.start) + editor.value.slice(s.end);
-                    editor.setSelectionRange(s.start, s.start);
-                }
-                editor.focus();
-                updatePosition();
-            }
-
-            // Find / Replace
-            function doFind() {
-                const term = prompt('Find what:', lastFind.term || '');
-                if (!term) return;
-                lastFind.term = term;
-                lastFind.index = editor.selectionEnd;
-                doFindNext();
-            }
-
-            function doFindNext() {
-                const term = lastFind.term;
-                if (!term) { alert('No search term. Use Find... first.'); return; }
-                const start = Math.max(lastFind.index, editor.selectionEnd);
-                const idx = editor.value.indexOf(term, start);
-                if (idx === -1) {
-                    alert('No further occurrences found.');
-                    lastFind.index = 0;
-                    return;
-                }
-                editor.focus();
-                editor.setSelectionRange(idx, idx + term.length);
-                lastFind.index = idx + term.length;
-                updatePosition();
-            }
-
-            function doReplace() {
-                const findTerm = prompt('Find what:', lastFind.term || '');
-                if (!findTerm) return;
-                const replaceTerm = prompt('Replace with:', '');
-                if (replaceTerm === null) return;
-                const choice = confirm('Replace all occurrences? (OK = All, Cancel = First)');
-                if (choice) {
-                    editor.value = editor.value.split(findTerm).join(replaceTerm);
-                } else {
-                    const idx = editor.value.indexOf(findTerm, editor.selectionEnd);
-                    if (idx === -1) { alert('Not found.'); return; }
-                    editor.value = editor.value.slice(0, idx) + replaceTerm + editor.value.slice(idx + findTerm.length);
-                    editor.setSelectionRange(idx, idx + replaceTerm.length);
-                }
-                lastFind.term = findTerm;
-                updatePosition();
-            }
-
-            function doGoTo() {
-                const lineStr = prompt('Line number:', '1');
-                if (!lineStr) return;
-                const lineNum = parseInt(lineStr, 10);
-                if (isNaN(lineNum) || lineNum < 1) { alert('Invalid line number'); return; }
-                const lines = editor.value.split('\n');
-                let pos = 0;
-                for (let i = 0; i < Math.min(lineNum - 1, lines.length - 1); i++) pos += lines[i].length + 1;
-                editor.focus();
-                editor.setSelectionRange(pos, pos);
-                updatePosition();
-            }
-
-            function doSelectAll() { editor.select(); updatePosition(); }
-            function doTimeDate() {
-                const now = new Date();
-                insertAtCursor(now.toLocaleString());
-            }
-
-            // Format actions
-            function doToggleWordWrap() {
-                editor.wrap = (editor.wrap === 'off' ? 'soft' : 'off');
-                alert('Word wrap ' + (editor.wrap === 'off' ? 'disabled' : 'enabled'));
-            }
-
-            function doFont() {
-                const family = prompt('Font family (e.g. VT323, monospace):', editor.style.fontFamily || 'VT323, monospace');
-                if (family === null) return;
-                const size = prompt('Font size (px):', parseInt(getComputedStyle(editor).fontSize, 10) || 16);
-                if (size === null) return;
-                editor.style.fontFamily = family;
-                editor.style.fontSize = (parseInt(size, 10) || 16) + 'px';
-            }
-
-            // View actions
-            function doToggleToolbar() {
-                menuBar.classList.toggle('hidden');
-            }
-            function doToggleStatusBar() {
-                statusBar.classList.toggle('hidden');
-            }
-
-            // Help actions
-            function doViewHelp() {
-                alert('This is a simple in-browser text editor demo. Use File → Open to open .txt files, Save to write back (if the browser supports it), or Save As to download.');
-            }
-            function doAbout() {
-                alert('Text Editor\nA small demo editor. Built-in basic Open/Save/Find/Replace functionality.');
-            }
-
-            // central menu click dispatcher
-            document.addEventListener('click', (e) => {
-                const li = e.target.closest('.dropdown-menu li');
-                if (!li || li.classList.contains('separator')) return;
-                const action = li.dataset.action;
-                if (!action) return;
-                switch (action) {
-                    case 'new': doNew(); break;
-                    case 'open': doOpen(); break;
-                    case 'save': doSave(); break;
-                    case 'saveas': doSaveAs(); break;
-                    case 'pagesetup': alert('Page setup is not supported in this demo.'); break;
-                    case 'print': doPrint(); break;
-                    case 'exit': doExit(); break;
-
-                    case 'undo': doUndo(); break;
-                    case 'cut': doCut(); break;
-                    case 'copy': doCopy(); break;
-                    case 'paste': doPaste(); break;
-                    case 'delete': doDelete(); break;
-                    case 'find': doFind(); break;
-                    case 'findnext': doFindNext(); break;
-                    case 'replace': doReplace(); break;
-                    case 'goto': doGoTo(); break;
-                    case 'selectall': doSelectAll(); break;
-                    case 'timedate': doTimeDate(); break;
-
-                    case 'wordwrap': doToggleWordWrap(); break;
-                    case 'font': doFont(); break;
-
-                    case 'toolbar': doToggleToolbar(); break;
-                    case 'statusbar': doToggleStatusBar(); break;
-
-                    case 'viewhelp': doViewHelp(); break;
-                    case 'about': doAbout(); break;
-
-                    default: console.log('Unhandled action:', action); break;
-                }
-            });
-
-            // update status on input and cursor movement
-            editor.addEventListener('input', updatePosition);
-            editor.addEventListener('click', updatePosition);
-            editor.addEventListener('keyup', updatePosition);
-            editor.addEventListener('scroll', () => { /* could update line/col for big files */ });
-
-            // keyboard shortcuts (basic)
-            document.addEventListener('keydown', (e) => {
-                if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
-                    switch (e.key.toLowerCase()) {
-                        case 's': e.preventDefault(); doSave(); break;
-                        case 'o': e.preventDefault(); doOpen(); break;
-                        case 'n': e.preventDefault(); doNew(); break;
-                        case 'f': e.preventDefault(); doFind(); break;
-                        case 'g': e.preventDefault(); doGoTo(); break;
-                        case 'a': if (document.activeElement === editor) { /* keep native */ } break;
-                    }
-                }
-            });
-
-            // initialize
+            const name = await showPrompt('Save as (enter file name):', currentFilename || 'Untitled.txt');
+            if (!name) return;
+            currentFilename = name.includes('.') ? name : (name + '.txt');
             updateTitle();
+            downloadAsFile(currentFilename);
+            await showAlert('Downloaded file.');
+        }
+
+        function preparePrintStyles() {
+            const css = `
+                @page {
+                    size: ${pageSetup.orientation === 'portrait' ? 'portrait' : 'landscape'};
+                    margin: ${pageSetup.marginTop}mm ${pageSetup.marginRight}mm ${pageSetup.marginBottom}mm ${pageSetup.marginLeft}mm;
+                }
+                pre {
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                    font-family: 'VT323', monospace;
+                    font-size: 12pt;
+                }
+            `;
+            return css;
+        }
+
+        function doPrint() {
+            const printWin = window.open('', '_blank');
+            if (!printWin) {
+                showAlert('Unable to open print window (pop-ups blocked).');
+                return;
+            }
+            const style = `<style>${preparePrintStyles()}</style>`;
+            const content = `<pre id="print-content">${escapeHtml(editor.value)}</pre>`;
+            printWin.document.write('<!doctype html><html><head><meta charset="utf-8">' + style + '</head><body>' + content + '</body></html>');
+            printWin.document.close();
+            printWin.focus();
+            setTimeout(()=> printWin.print(), 300);
+        }
+
+        async function doExit() {
+            const ok = await showConfirm('Close the editor window? Unsaved changes will be lost.');
+            if (!ok) return;
+            try { window.close(); } catch (e) { showAlert('Unable to close the window programmatically.'); }
+        }
+
+        function doUndo() { document.execCommand('undo'); }
+        function doCut() { editor.focus(); document.execCommand('cut'); }
+        function doCopy() { editor.focus(); document.execCommand('copy'); }
+        function doPaste() {
+            if (navigator.clipboard && navigator.clipboard.readText) {
+                navigator.clipboard.readText().then(text => insertAtCursor(text)).catch(()=>document.execCommand('paste'));
+            } else {
+                document.execCommand('paste');
+            }
+        }
+
+        function doDelete() {
+            const s = getSelectionRange();
+            if (s.start === s.end) {
+                editor.value = editor.value.slice(0, s.start) + editor.value.slice(s.end + 1);
+                editor.setSelectionRange(s.start, s.start);
+            } else {
+                editor.value = editor.value.slice(0, s.start) + editor.value.slice(s.end);
+                editor.setSelectionRange(s.start, s.start);
+            }
+            editor.focus();
             updatePosition();
-        })();
+            updateGutter();
+        }
+
+        // Find/Replace panel wiring
+        const findPanel = document.getElementById('findPanel');
+        const findTermEl = document.getElementById('findTerm');
+        const replaceTermEl = document.getElementById('replaceTerm');
+        const matchCaseEl = document.getElementById('matchCase');
+        const wholeWordEl = document.getElementById('wholeWord');
+
+        document.getElementById('closeFind').addEventListener('click', ()=> { findPanel.style.display = 'none'; });
+
+        function openFindPanel(initialTerm = '') {
+            findPanel.style.display = 'block';
+            findTermEl.value = initialTerm || lastFind.term || '';
+            replaceTermEl.value = '';
+            matchCaseEl.checked = !!lastFind.opts.matchCase;
+            wholeWordEl.checked = !!lastFind.opts.wholeWord;
+            findTermEl.focus();
+        }
+
+        function findNextOccurrence(reverse = false) {
+            const term = findTermEl.value;
+            if (!term) { showAlert('Enter a search term first.'); return; }
+            lastFind.term = term;
+            lastFind.opts = { matchCase: matchCaseEl.checked, wholeWord: wholeWordEl.checked };
+            const flags = 'g' + (matchCaseEl.checked ? '' : 'i');
+            const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            let re;
+            if (wholeWordEl.checked) re = new RegExp('\\b' + escaped + '\\b', flags);
+            else re = new RegExp(escaped, flags);
+
+            const text = editor.value;
+            if (!reverse) {
+                re.lastIndex = editor.selectionEnd;
+                const m = re.exec(text);
+                if (!m) { showAlert('No further occurrences found.'); return; }
+                editor.focus();
+                editor.setSelectionRange(m.index, m.index + m[0].length);
+                updatePosition();
+            } else {
+                const upto = text.slice(0, editor.selectionStart);
+                let match, last = null;
+                while ((match = re.exec(upto)) !== null) last = match;
+                if (!last) { showAlert('No previous occurrences found.'); return; }
+                editor.focus();
+                editor.setSelectionRange(last.index, last.index + last[0].length);
+                updatePosition();
+            }
+        }
+
+        function replaceCurrent() {
+            const term = findTermEl.value;
+            if (!term) { showAlert('Enter a search term first.'); return; }
+            const replaceWith = replaceTermEl.value || '';
+            const selected = editor.value.substring(editor.selectionStart, editor.selectionEnd);
+            const opts = { matchCase: matchCaseEl.checked, wholeWord: wholeWordEl.checked };
+            const flags = (opts.matchCase ? '' : 'i');
+            const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            let re = opts.wholeWord ? new RegExp('^\\b' + escaped + '\\b$', flags) : new RegExp('^' + escaped + '$', flags);
+            if (re.test(selected)) {
+                const s = getSelectionRange();
+                editor.value = editor.value.slice(0, s.start) + replaceWith + editor.value.slice(s.end);
+                editor.setSelectionRange(s.start, s.start + replaceWith.length);
+                updatePosition();
+                updateGutter();
+            }
+            findNextOccurrence(false);
+        }
+
+        function replaceAll() {
+            const term = findTermEl.value;
+            if (!term) { showAlert('Enter a search term first.'); return; }
+            const replaceWith = replaceTermEl.value || '';
+            const opts = { matchCase: matchCaseEl.checked, wholeWord: wholeWordEl.checked };
+            const flags = 'g' + (opts.matchCase ? '' : 'i');
+            const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            let re = opts.wholeWord ? new RegExp('\\b' + escaped + '\\b', flags) : new RegExp(escaped, flags);
+            editor.value = editor.value.replace(re, replaceWith);
+            updatePosition();
+            updateGutter();
+            showAlert('All occurrences replaced.');
+        }
+
+        document.getElementById('findNextBtn').addEventListener('click', ()=> findNextOccurrence(false));
+        document.getElementById('findPrevBtn').addEventListener('click', ()=> findNextOccurrence(true));
+        document.getElementById('replaceBtn').addEventListener('click', replaceCurrent);
+        document.getElementById('replaceAllBtn').addEventListener('click', replaceAll);
+
+        async function doFind() { openFindPanel(); }
+        function doFindNext() { findNextOccurrence(false); }
+        function doReplace() { openFindPanel(); }
+
+        async function doGoTo() {
+            const lineStr = await showPrompt('Line number:', '1');
+            if (!lineStr) return;
+            const lineNum = parseInt(lineStr, 10);
+            if (isNaN(lineNum) || lineNum < 1) { showAlert('Invalid line number'); return; }
+            const lines = editor.value.split('\n');
+            let pos = 0;
+            for (let i = 0; i < Math.min(lineNum - 1, lines.length - 1); i++) pos += lines[i].length + 1;
+            editor.focus();
+            editor.setSelectionRange(pos, pos);
+            updatePosition();
+        }
+
+        function doSelectAll() { editor.select(); updatePosition(); }
+        async function doWordCount() {
+            const text = editor.value.trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            const chars = text.length;
+            await showAlert(`Words: ${words}\nCharacters (no trailing/leading spaces): ${chars}`, 'Word Count');
+        }
+
+        function doTimeDate() {
+            const now = new Date();
+            insertAtCursor(now.toLocaleString());
+        }
+
+        function doToggleWordWrap() {
+            editor.wrap = (editor.wrap === 'off' ? 'soft' : 'off');
+            showAlert('Word wrap ' + (editor.wrap === 'off' ? 'disabled' : 'enabled'));
+        }
+
+        async function doFont() {
+            const family = await showPrompt('Font family (e.g. VT323, monospace):', editor.style.fontFamily || 'VT323, monospace');
+            if (family === null) return;
+            const size = await showPrompt('Font size (px):', parseInt(getComputedStyle(editor).fontSize, 10) || 16);
+            if (size === null) return;
+            editor.style.fontFamily = family;
+            editor.style.fontSize = (parseInt(size, 10) || 16) + 'px';
+        }
+
+        function doToggleToolbar() {
+            document.getElementById('menuBar').classList.toggle('hidden');
+        }
+        function doToggleStatusBar() {
+            statusBar.classList.toggle('hidden');
+        }
+
+        function doToggleLineNumbers() {
+            lineNumbersEnabled = !lineNumbersEnabled;
+            updateGutter();
+        }
+
+        function doToggleAutosave() {
+            enableAutosave(!autosaveEnabled);
+        }
+
+        function doViewHelp() {
+            showAlert('This is a simple text editor demo. Use the File menu to open and save files. Find/Replace uses the panel at top-right.', 'Help');
+        }
+        function doAbout() {
+            showAlert('Text Editor — Retro demo\nFeatures: Open/Save (including File System Access when supported), Find/Replace, Page Setup/Print, Autosave, Line Numbers.');
+        }
+
+        async function doPageSetup() {
+            const res = await showDialog({
+                title: 'Page Setup',
+                inputs: [
+                    { name: 'paper', label: 'Paper (A4, Letter):', type: 'text', value: pageSetup.paper },
+                    { name: 'orientation', label: 'Orientation (portrait|landscape):', type: 'text', value: pageSetup.orientation },
+                    { name: 'marginTop', label: 'Top margin (mm):', type: 'number', value: pageSetup.marginTop },
+                    { name: 'marginRight', label: 'Right margin (mm):', type: 'number', value: pageSetup.marginRight },
+                    { name: 'marginBottom', label: 'Bottom margin (mm):', type: 'number', value: pageSetup.marginBottom },
+                    { name: 'marginLeft', label: 'Left margin (mm):', type: 'number', value: pageSetup.marginLeft },
+                ],
+                buttons: [{ label: 'Cancel', value: null, class: 'ghost' }, { label: 'OK', value: true }]
+            });
+
+            if (!res || res.value === null) return;
+            try {
+                pageSetup.paper = res.inputs.paper || pageSetup.paper;
+                pageSetup.orientation = (res.inputs.orientation === 'landscape') ? 'landscape' : 'portrait';
+                pageSetup.marginTop = Number(res.inputs.marginTop) || pageSetup.marginTop;
+                pageSetup.marginRight = Number(res.inputs.marginRight) || pageSetup.marginRight;
+                pageSetup.marginBottom = Number(res.inputs.marginBottom) || pageSetup.marginBottom;
+                pageSetup.marginLeft = Number(res.inputs.marginLeft) || pageSetup.marginLeft;
+                await showAlert('Page setup saved.');
+            } catch (e) {
+                await showAlert('Invalid values, page setup not changed.');
+            }
+        }
+
+        function insertAtCursor(text) {
+            const s = getSelectionRange();
+            const before = editor.value.slice(0, s.start);
+            const after = editor.value.slice(s.end);
+            editor.value = before + text + after;
+            const pos = s.start + text.length;
+            editor.setSelectionRange(pos, pos);
+            editor.focus();
+            updatePosition();
+            updateGutter();
+        }
+
+        function getSelectionRange() {
+            return { start: editor.selectionStart, end: editor.selectionEnd };
+        }
+
+        document.addEventListener('click', async (e) => {
+            const li = e.target.closest('.dropdown-menu li');
+            if (!li || li.classList.contains('separator')) return;
+            const action = li.dataset.action;
+            if (!action) return;
+            switch (action) {
+                case 'new': await doNew(); break;
+                case 'open': await doOpen(); break;
+                case 'save': await doSave(); break;
+                case 'saveas': await doSaveAs(); break;
+                case 'pagesetup': await doPageSetup(); break;
+                case 'print': doPrint(); break;
+                case 'exit': await doExit(); break;
+
+                case 'undo': doUndo(); break;
+                case 'cut': doCut(); break;
+                case 'copy': doCopy(); break;
+                case 'paste': doPaste(); break;
+                case 'delete': doDelete(); break;
+                case 'find': await doFind(); break;
+                case 'findnext': doFindNext(); break;
+                case 'replace': await doReplace(); break;
+                case 'goto': await doGoTo(); break;
+                case 'selectall': doSelectAll(); break;
+                case 'wordcount': await doWordCount(); break;
+                case 'timedate': doTimeDate(); break;
+
+                case 'wordwrap': doToggleWordWrap(); break;
+                case 'font': await doFont(); break;
+
+                case 'toolbar': doToggleToolbar(); break;
+                case 'statusbar': doToggleStatusBar(); break;
+                case 'linenumbers': doToggleLineNumbers(); break;
+                case 'autosave': doToggleAutosave(); break;
+
+                case 'viewhelp': doViewHelp(); break;
+                case 'about': doAbout(); break;
+
+                default: console.log('Unhandled action:', action); break;
+            }
+        });
+
+        editor.addEventListener('input', () => { updatePosition(); updateGutter(); });
+        editor.addEventListener('click', updatePosition);
+        editor.addEventListener('keyup', updatePosition);
+        editor.addEventListener('scroll', () => { gutter.scrollTop = editor.scrollTop; });
+
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+                switch (e.key.toLowerCase()) {
+                    case 's': e.preventDefault(); doSave(); break;
+                    case 'o': e.preventDefault(); doOpen(); break;
+                    case 'n': e.preventDefault(); doNew(); break;
+                    case 'f': e.preventDefault(); openFindPanel(); break;
+                    case 'g': e.preventDefault(); doGoTo(); break;
+                    case 'a': if (document.activeElement === editor) { /* keep native */ } break;
+                }
+            }
+            if (e.key === 'Escape') {
+                if (findPanel.style.display === 'block') findPanel.style.display = 'none';
+            }
+        });
+
+        try {
+            const draft = localStorage.getItem('texteditor.autosave');
+            if (draft) {
+                (async () => {
+                    const ok = await showConfirm('A locally saved draft was found. Restore it?');
+                    if (ok) {
+                        editor.value = draft;
+                        updateGutter();
+                        updatePosition();
+                    }
+                })();
+            }
+        } catch (e) {}
+
+        window._textEditor = {
+            getState: () => ({ filename: currentFilename, hasHandle: !!currentFileHandle })
+        };
+
+    })();
     </script>
 </body>
 </html>
