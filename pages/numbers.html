@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Number Range Generator</title>
+</head>
+<body>
+
+    <h2>Number List Generator</h2>
+    
+    <label for="start">Start Number:</label>
+    <input type="number" id="start" value="1">
+    
+    <br><br>
+    
+    <label for="end">End Number:</label>
+    <input type="number" id="end" value="10000">
+    
+    <br><br>
+    
+    <button onclick="generateList()">Generate List</button>
+    <button onclick="clearList()">Clear</button>
+
+    <hr>
+
+    <div id="result" style="white-space: pre-wrap; font-family: monospace;">
+        </div>
+
+    <script>
+        function generateList() {
+            const start = parseInt(document.getElementById('start').value);
+            const end = parseInt(document.getElementById('end').value);
+            const resultDiv = document.getElementById('result');
+            
+            // Basic validation
+            if (isNaN(start) || isNaN(end)) {
+                resultDiv.innerText = "Please enter valid numbers.";
+                return;
+            }
+
+            if (start > end) {
+                resultDiv.innerText = "The start number must be less than or equal to the end number.";
+                return;
+            }
+
+            // Using an array and join() is much faster for performance than 
+            // adding strings one by one in a loop.
+            let numbers = [];
+            for (let i = start; i <= end; i++) {
+                numbers.push(i);
+            }
+
+            resultDiv.innerText = numbers.join(', ');
+        }
+
+        function clearList() {
+            document.getElementById('result').innerText = "";
+        }
+    </script>
+
+</body>
+</html>
