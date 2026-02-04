@@ -1,16 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Untitled - Text Editor</title>
     <link rel="stylesheet" href="../css/retro.css">
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <style>
+        /* Minimal inline styles to make toggles visible when run without the project's CSS */
+        .dropdown-menu { display: none; position: absolute; background: #eee; list-style: none; padding: 4px; margin: 0; border: 1px solid #aaa; }
+        .menu-item { position: relative; padding: 6px 10px; cursor: default; }
+        .menu-item:hover > .dropdown-menu { display: block; }
+        .dropdown-menu li { padding: 4px 10px; cursor: pointer; white-space: nowrap; }
+        .dropdown-menu .separator { height: 1px; background: #999; margin: 4px 0; pointer-events: none; }
+        .editor-window { width: 800px; margin: 20px auto; border: 1px solid #333; background: #fff; }
+        .title-bar { display:flex; justify-content:space-between; align-items:center; padding:6px; background:#222; color:#fff; }
+        .menu-bar { background:#ddd; padding:4px; }
+        .menu-list { display:flex; gap:8px; margin:0; padding:0; list-style:none; }
+        .text-editor { width:100%; height:400px; box-sizing:border-box; font-family: 'VT323', monospace; padding:10px; }
+        .status-bar { background:#eee; padding:4px; font-size:14px; }
+        .hidden { display:none !important; }
+    </style>
 </head>
 <body>
     <div class="editor-window">
         <div class="title-bar">
-            <span class="window-title">Untitled - Text Editor</span>
+            <span class="window-title" id="windowTitle">Untitled - Text Editor</span>
             <div class="window-controls">
                 <button class="control-button minimize">-</button>
                 <button class="control-button maximize">□</button>
@@ -18,71 +33,379 @@
             </div>
         </div>
 
-        <nav class="menu-bar">
+        <nav class="menu-bar" id="menuBar">
             <ul class="menu-list">
                 <li class="menu-item">
                     File
                     <ul class="dropdown-menu">
-                        <li>New</li>
-                        <li>Open...</li>
-                        <li>Save</li>
-                        <li>Save As...</li>
+                        <li data-action="new">New</li>
+                        <li data-action="open">Open...</li>
+                        <li data-action="save">Save</li>
+                        <li data-action="saveas">Save As...</li>
                         <li class="separator"></li>
-                        <li>Page Setup...</li>
-                        <li>Print...</li>
+                        <li data-action="pagesetup">Page Setup...</li>
+                        <li data-action="print">Print...</li>
                         <li class="separator"></li>
-                        <li>Exit</li>
+                        <li data-action="exit">Exit</li>
                     </ul>
                 </li>
                 <li class="menu-item">
                     Edit
                     <ul class="dropdown-menu">
-                        <li>Undo</li>
+                        <li data-action="undo">Undo</li>
                         <li class="separator"></li>
-                        <li>Cut</li>
-                        <li>Copy</li>
-                        <li>Paste</li>
-                        <li>Delete</li>
+                        <li data-action="cut">Cut</li>
+                        <li data-action="copy">Copy</li>
+                        <li data-action="paste">Paste</li>
+                        <li data-action="delete">Delete</li>
                         <li class="separator"></li>
-                        <li>Find...</li>
-                        <li>Find Next</li>
-                        <li>Replace...</li>
-                        <li>Go To...</li>
+                        <li data-action="find">Find...</li>
+                        <li data-action="findnext">Find Next</li>
+                        <li data-action="replace">Replace...</li>
+                        <li data-action="goto">Go To...</li>
                         <li class="separator"></li>
-                        <li>Select All</li>
-                        <li>Time/Date</li>
+                        <li data-action="selectall">Select All</li>
+                        <li data-action="timedate">Time/Date</li>
                     </ul>
                 </li>
                 <li class="menu-item">
                     Format
                     <ul class="dropdown-menu">
-                        <li>Word Wrap</li>
-                        <li>Font...</li>
+                        <li data-action="wordwrap">Word Wrap</li>
+                        <li data-action="font">Font...</li>
                     </ul>
                 </li>
                 <li class="menu-item">
                     View
                     <ul class="dropdown-menu">
-                        <li>Toolbar</li>
-                        <li>Status Bar</li>
+                        <li data-action="toolbar">Toolbar</li>
+                        <li data-action="statusbar">Status Bar</li>
                     </ul>
                 </li>
                 <li class="menu-item">
                     Help
                     <ul class="dropdown-menu">
-                        <li>View Help</li>
+                        <li data-action="viewhelp">View Help</li>
                         <li class="separator"></li>
-                        <li>About Text Editor</li>
+                        <li data-action="about">About Text Editor</li>
                     </ul>
                 </li>
             </ul>
         </nav>
 
-        <textarea class="text-editor" placeholder="Type your text here..."></textarea>
+        <textarea class="text-editor" id="editor" placeholder="Type your text here..." wrap="soft"></textarea>
 
-        <div class="status-bar">
-            <span>Ln 1, Col 1</span>
+        <div class="status-bar" id="statusBar">
+            <span id="position">Ln 1, Col 1</span>
         </div>
     </div>
+
+    <!-- hidden file input used by Open -->
+    <input type="file" id="fileInput" accept=".txt,text/plain" class="hidden" />
+
+    <script>
+        (function () {
+            const editor = document.getElementById('editor');
+            const fileInput = document.getElementById('fileInput');
+            const windowTitle = document.getElementById('windowTitle');
+            const statusBar = document.getElementById('statusBar');
+            const menuBar = document.getElementById('menuBar');
+            const positionSpan = document.getElementById('position');
+
+            let currentFilename = 'Untitled';
+            let lastFind = { term: '', index: 0 };
+
+            function updateTitle() {
+                windowTitle.textContent = currentFilename + ' - Text Editor';
+            }
+
+            function updatePosition() {
+                const text = editor.value;
+                const pos = editor.selectionStart;
+                const lines = text.slice(0, pos).split('\n');
+                const line = lines.length;
+                const col = lines[lines.length - 1].length + 1;
+                positionSpan.textContent = `Ln ${line}, Col ${col}`;
+            }
+
+            // basic save (downloads file)
+            function saveFile(filename) {
+                const blob = new Blob([editor.value], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+            }
+
+            // File menu actions
+            function doNew() {
+                if (editor.value && !confirm('Discard current changes and create a new file?')) return;
+                editor.value = '';
+                currentFilename = 'Untitled';
+                updateTitle();
+                updatePosition();
+            }
+
+            function doOpen() {
+                fileInput.value = '';
+                fileInput.click();
+            }
+
+            fileInput.addEventListener('change', (e) => {
+                const f = e.target.files && e.target.files[0];
+                if (!f) return;
+                const reader = new FileReader();
+                reader.onload = () => {
+                    editor.value = reader.result;
+                    currentFilename = f.name || 'Untitled';
+                    updateTitle();
+                    updatePosition();
+                };
+                reader.readAsText(f);
+            });
+
+            function doSave() {
+                if (currentFilename === 'Untitled') return doSaveAs();
+                saveFile(currentFilename);
+            }
+
+            function doSaveAs() {
+                let name = prompt('Save as (enter file name):', currentFilename);
+                if (!name) return;
+                if (!name.includes('.')) name = name + '.txt';
+                currentFilename = name;
+                updateTitle();
+                saveFile(currentFilename);
+            }
+
+            function doPrint() {
+                // give a preview of the editor's contents for printing
+                const printWin = window.open('', '_blank');
+                if (!printWin) { alert('Unable to open print window (pop-ups blocked).'); return; }
+                printWin.document.write('<pre>' + escapeHtml(editor.value) + '</pre>');
+                printWin.document.close();
+                printWin.focus();
+                printWin.print();
+            }
+
+            function doExit() {
+                if (confirm('Close the editor window? Unsaved changes will be lost.')) {
+                    try { window.close(); }
+                    catch (err) { alert('Unable to close the window programmatically.'); }
+                }
+            }
+
+            // Edit actions
+            function doUndo() { document.execCommand('undo'); }
+            function doCut() { editor.focus(); document.execCommand('cut'); }
+            function doCopy() { editor.focus(); document.execCommand('copy'); }
+            function doPaste() {
+                if (navigator.clipboard && navigator.clipboard.readText) {
+                    navigator.clipboard.readText().then(text => {
+                        insertAtCursor(text);
+                    }).catch(() => {
+                        document.execCommand('paste'); // fallback (may be blocked)
+                    });
+                } else {
+                    document.execCommand('paste');
+                }
+            }
+            function doDelete() {
+                const s = getSelectionRange();
+                if (s.start === s.end) {
+                    // delete following character
+                    editor.value = editor.value.slice(0, s.start) + editor.value.slice(s.end + 1);
+                    editor.setSelectionRange(s.start, s.start);
+                } else {
+                    editor.value = editor.value.slice(0, s.start) + editor.value.slice(s.end);
+                    editor.setSelectionRange(s.start, s.start);
+                }
+                editor.focus();
+                updatePosition();
+            }
+
+            // Find / Replace
+            function doFind() {
+                const term = prompt('Find what:', lastFind.term || '');
+                if (!term) return;
+                lastFind.term = term;
+                lastFind.index = editor.selectionEnd;
+                doFindNext();
+            }
+
+            function doFindNext() {
+                const term = lastFind.term;
+                if (!term) { alert('No search term. Use Find... first.'); return; }
+                const start = Math.max(lastFind.index, editor.selectionEnd);
+                const idx = editor.value.indexOf(term, start);
+                if (idx === -1) {
+                    alert('No further occurrences found.');
+                    lastFind.index = 0;
+                    return;
+                }
+                editor.focus();
+                editor.setSelectionRange(idx, idx + term.length);
+                lastFind.index = idx + term.length;
+                updatePosition();
+            }
+
+            function doReplace() {
+                const findTerm = prompt('Find what:', lastFind.term || '');
+                if (!findTerm) return;
+                const replaceTerm = prompt('Replace with:', '');
+                if (replaceTerm === null) return;
+                const choice = confirm('Replace all occurrences? (OK = All, Cancel = First)');
+                if (choice) {
+                    editor.value = editor.value.split(findTerm).join(replaceTerm);
+                } else {
+                    const idx = editor.value.indexOf(findTerm, editor.selectionEnd);
+                    if (idx === -1) { alert('Not found.'); return; }
+                    editor.value = editor.value.slice(0, idx) + replaceTerm + editor.value.slice(idx + findTerm.length);
+                    editor.setSelectionRange(idx, idx + replaceTerm.length);
+                }
+                lastFind.term = findTerm;
+                updatePosition();
+            }
+
+            function doGoTo() {
+                const lineStr = prompt('Line number:', '1');
+                if (!lineStr) return;
+                const lineNum = parseInt(lineStr, 10);
+                if (isNaN(lineNum) || lineNum < 1) { alert('Invalid line number'); return; }
+                const lines = editor.value.split('\n');
+                let pos = 0;
+                for (let i = 0; i < Math.min(lineNum - 1, lines.length - 1); i++) pos += lines[i].length + 1;
+                editor.focus();
+                editor.setSelectionRange(pos, pos);
+                updatePosition();
+            }
+
+            function doSelectAll() { editor.select(); updatePosition(); }
+            function doTimeDate() {
+                const now = new Date();
+                insertAtCursor(now.toLocaleString());
+            }
+
+            // Format actions
+            function doToggleWordWrap() {
+                // toggle between 'off' and 'soft'
+                editor.wrap = (editor.wrap === 'off' ? 'soft' : 'off');
+                alert('Word wrap ' + (editor.wrap === 'off' ? 'disabled' : 'enabled'));
+            }
+
+            function doFont() {
+                const family = prompt('Font family (e.g. VT323, monospace):', editor.style.fontFamily || 'VT323, monospace');
+                if (family === null) return;
+                const size = prompt('Font size (px):', parseInt(getComputedStyle(editor).fontSize, 10) || 16);
+                if (size === null) return;
+                editor.style.fontFamily = family;
+                editor.style.fontSize = (parseInt(size, 10) || 16) + 'px';
+            }
+
+            // View actions
+            function doToggleToolbar() {
+                menuBar.classList.toggle('hidden');
+            }
+            function doToggleStatusBar() {
+                statusBar.classList.toggle('hidden');
+            }
+
+            // Help actions
+            function doViewHelp() {
+                alert('This is a simple in-browser text editor demo. Use File → Open to open .txt files, Save to download content.');
+            }
+            function doAbout() {
+                alert('Text Editor\nA small demo editor. Built-in basic Open/Save/Find/Replace functionality.');
+            }
+
+            // helpers
+            function escapeHtml(s) {
+                return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            }
+
+            function insertAtCursor(text) {
+                const s = getSelectionRange();
+                const before = editor.value.slice(0, s.start);
+                const after = editor.value.slice(s.end);
+                editor.value = before + text + after;
+                const pos = s.start + text.length;
+                editor.setSelectionRange(pos, pos);
+                editor.focus();
+                updatePosition();
+            }
+
+            function getSelectionRange() {
+                return { start: editor.selectionStart, end: editor.selectionEnd };
+            }
+
+            // central menu click dispatcher
+            document.addEventListener('click', (e) => {
+                const li = e.target.closest('.dropdown-menu li');
+                if (!li || li.classList.contains('separator')) return;
+                const action = li.dataset.action;
+                if (!action) return;
+                switch (action) {
+                    case 'new': doNew(); break;
+                    case 'open': doOpen(); break;
+                    case 'save': doSave(); break;
+                    case 'saveas': doSaveAs(); break;
+                    case 'pagesetup': alert('Page setup is not supported in this demo.'); break;
+                    case 'print': doPrint(); break;
+                    case 'exit': doExit(); break;
+
+                    case 'undo': doUndo(); break;
+                    case 'cut': doCut(); break;
+                    case 'copy': doCopy(); break;
+                    case 'paste': doPaste(); break;
+                    case 'delete': doDelete(); break;
+                    case 'find': doFind(); break;
+                    case 'findnext': doFindNext(); break;
+                    case 'replace': doReplace(); break;
+                    case 'goto': doGoTo(); break;
+                    case 'selectall': doSelectAll(); break;
+                    case 'timedate': doTimeDate(); break;
+
+                    case 'wordwrap': doToggleWordWrap(); break;
+                    case 'font': doFont(); break;
+
+                    case 'toolbar': doToggleToolbar(); break;
+                    case 'statusbar': doToggleStatusBar(); break;
+
+                    case 'viewhelp': doViewHelp(); break;
+                    case 'about': doAbout(); break;
+
+                    default: console.log('Unhandled action:', action); break;
+                }
+            });
+
+            // update status on input and cursor movement
+            editor.addEventListener('input', updatePosition);
+            editor.addEventListener('click', updatePosition);
+            editor.addEventListener('keyup', updatePosition);
+            editor.addEventListener('scroll', () => { /* could update line/col for big files */ });
+
+            // keyboard shortcuts (basic)
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+                    switch (e.key.toLowerCase()) {
+                        case 's': e.preventDefault(); doSave(); break;
+                        case 'o': e.preventDefault(); doOpen(); break;
+                        case 'n': e.preventDefault(); doNew(); break;
+                        case 'f': e.preventDefault(); doFind(); break;
+                        case 'g': e.preventDefault(); doGoTo(); break;
+                        case 'a': if (document.activeElement === editor) { /* keep native */ } break;
+                    }
+                }
+            });
+
+            // initialize
+            updateTitle();
+            updatePosition();
+        })();
+    </script>
 </body>
 </html>
