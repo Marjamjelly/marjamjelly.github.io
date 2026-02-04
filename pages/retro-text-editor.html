@@ -85,7 +85,7 @@
         </div>
     </div>
 
-    <!-- hidden file input used by Open -->
+    <!-- hidden file input used as a fallback on browsers without the File System Access API -->
     <input type="file" id="fileInput" accept=".txt,text/plain" style="display:none" />
 
     <script>
@@ -98,6 +98,7 @@
             const positionSpan = document.getElementById('position');
 
             let currentFilename = 'Untitled';
+            let currentFileHandle = null; // File System Access handle when available
             let lastFind = { term: '', index: 0 };
 
             function updateTitle() {
@@ -113,8 +114,53 @@
                 positionSpan.textContent = `Ln ${line}, Col ${col}`;
             }
 
-            // basic save (downloads file)
-            function saveFile(filename) {
+            function escapeHtml(s) {
+                return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            }
+
+            function insertAtCursor(text) {
+                const s = getSelectionRange();
+                const before = editor.value.slice(0, s.start);
+                const after = editor.value.slice(s.end);
+                editor.value = before + text + after;
+                const pos = s.start + text.length;
+                editor.setSelectionRange(pos, pos);
+                editor.focus();
+                updatePosition();
+            }
+
+            function getSelectionRange() {
+                return { start: editor.selectionStart, end: editor.selectionEnd };
+            }
+
+            // ---------- Save / Open helpers (File System Access API + fallback) ----------
+            function supportsFileSystemAccess() {
+                // feature-detect the modern API
+                return ('showOpenFilePicker' in window) && ('showSaveFilePicker' in window || 'showSaveFilePicker' in window);
+            }
+
+            async function saveToHandle(handle) {
+                try {
+                    // request write permission if available
+                    if (handle.requestPermission) {
+                        const perm = await handle.requestPermission({ mode: 'readwrite' });
+                        if (perm !== 'granted') {
+                            alert('Write permission was not granted.');
+                            return false;
+                        }
+                    }
+                    const writable = await handle.createWritable();
+                    await writable.write(editor.value);
+                    await writable.close();
+                    return true;
+                } catch (err) {
+                    console.error('Error writing file:', err);
+                    return false;
+                }
+            }
+
+            // fallback download
+            function downloadAsFile(filename) {
                 const blob = new Blob([editor.value], { type: 'text/plain;charset=utf-8' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -126,16 +172,40 @@
                 URL.revokeObjectURL(url);
             }
 
-            // File menu actions
+            // ---------- File menu actions ----------
             function doNew() {
                 if (editor.value && !confirm('Discard current changes and create a new file?')) return;
                 editor.value = '';
                 currentFilename = 'Untitled';
+                currentFileHandle = null;
                 updateTitle();
                 updatePosition();
             }
 
-            function doOpen() {
+            async function doOpen() {
+                // Prefer File System Access API so we get a writable handle (can save back to same file)
+                if ('showOpenFilePicker' in window) {
+                    try {
+                        const [handle] = await window.showOpenFilePicker({
+                            types: [{ description: 'Text Files', accept: { 'text/plain': ['.txt'] } }],
+                            excludeAcceptAllOption: false,
+                            multiple: false
+                        });
+                        const file = await handle.getFile();
+                        const contents = await file.text();
+                        editor.value = contents;
+                        currentFileHandle = handle;
+                        currentFilename = handle.name || file.name || 'Untitled';
+                        updateTitle();
+                        updatePosition();
+                        return;
+                    } catch (err) {
+                        // user probably cancelled or API failed — fall back to input
+                        console.debug('showOpenFilePicker cancelled or failed:', err);
+                    }
+                }
+
+                // fallback: traditional file input (no persistent handle available)
                 fileInput.value = '';
                 fileInput.click();
             }
@@ -147,28 +217,91 @@
                 reader.onload = () => {
                     editor.value = reader.result;
                     currentFilename = f.name || 'Untitled';
+                    currentFileHandle = null; // can't write back when opened via input
                     updateTitle();
                     updatePosition();
                 };
                 reader.readAsText(f);
             });
 
-            function doSave() {
-                if (currentFilename === 'Untitled') return doSaveAs();
-                saveFile(currentFilename);
+            async function doSave() {
+                // If we have a file handle from the File System Access API, write back to it
+                if (currentFileHandle && currentFileHandle.createWritable) {
+                    const ok = await saveToHandle(currentFileHandle);
+                    if (ok) {
+                        alert('Saved.');
+                        return;
+                    } else {
+                        alert('Save failed — falling back to Save As / download.');
+                    }
+                }
+
+                // If the platform supports showSaveFilePicker, use it and keep the handle
+                if ('showSaveFilePicker' in window) {
+                    try {
+                        const handle = await window.showSaveFilePicker({
+                            suggestedName: currentFilename,
+                            types: [{ description: 'Text Files', accept: { 'text/plain': ['.txt'] } }]
+                        });
+                        const ok = await saveToHandle(handle);
+                        if (ok) {
+                            currentFileHandle = handle;
+                            currentFilename = handle.name || currentFilename;
+                            updateTitle();
+                            alert('Saved.');
+                            return;
+                        }
+                    } catch (err) {
+                        console.debug('showSaveFilePicker cancelled or failed:', err);
+                        // fall back to download
+                    }
+                }
+
+                // Fallback: trigger download (this creates a new file)
+                if (!currentFilename || currentFilename === 'Untitled') {
+                    let name = prompt('Save as (enter file name):', currentFilename || 'Untitled.txt');
+                    if (!name) return;
+                    if (!name.includes('.')) name = name + '.txt';
+                    currentFilename = name;
+                    updateTitle();
+                }
+                downloadAsFile(currentFilename);
             }
 
-            function doSaveAs() {
-                let name = prompt('Save as (enter file name):', currentFilename);
+            async function doSaveAs() {
+                // Prefer showSaveFilePicker if available
+                if ('showSaveFilePicker' in window) {
+                    try {
+                        const handle = await window.showSaveFilePicker({
+                            suggestedName: currentFilename,
+                            types: [{ description: 'Text Files', accept: { 'text/plain': ['.txt'] } }]
+                        });
+                        const ok = await saveToHandle(handle);
+                        if (ok) {
+                            currentFileHandle = handle;
+                            currentFilename = handle.name || currentFilename;
+                            updateTitle();
+                            alert('Saved.');
+                            return;
+                        } else {
+                            alert('Save As failed.');
+                            return;
+                        }
+                    } catch (err) {
+                        console.debug('showSaveFilePicker cancelled or failed:', err);
+                    }
+                }
+
+                // Fallback: ask for filename and download
+                let name = prompt('Save as (enter file name):', currentFilename || 'Untitled.txt');
                 if (!name) return;
                 if (!name.includes('.')) name = name + '.txt';
                 currentFilename = name;
                 updateTitle();
-                saveFile(currentFilename);
+                downloadAsFile(currentFilename);
             }
 
             function doPrint() {
-                // give a preview of the editor's contents for printing
                 const printWin = window.open('', '_blank');
                 if (!printWin) { alert('Unable to open print window (pop-ups blocked).'); return; }
                 printWin.document.write('<pre>' + escapeHtml(editor.value) + '</pre>');
@@ -184,7 +317,7 @@
                 }
             }
 
-            // Edit actions
+            // ---------- Edit actions ----------
             function doUndo() { document.execCommand('undo'); }
             function doCut() { editor.focus(); document.execCommand('cut'); }
             function doCopy() { editor.focus(); document.execCommand('copy'); }
@@ -202,7 +335,6 @@
             function doDelete() {
                 const s = getSelectionRange();
                 if (s.start === s.end) {
-                    // delete following character
                     editor.value = editor.value.slice(0, s.start) + editor.value.slice(s.end + 1);
                     editor.setSelectionRange(s.start, s.start);
                 } else {
@@ -277,7 +409,6 @@
 
             // Format actions
             function doToggleWordWrap() {
-                // toggle between 'off' and 'soft'
                 editor.wrap = (editor.wrap === 'off' ? 'soft' : 'off');
                 alert('Word wrap ' + (editor.wrap === 'off' ? 'disabled' : 'enabled'));
             }
@@ -301,30 +432,10 @@
 
             // Help actions
             function doViewHelp() {
-                alert('This is a simple in-browser text editor demo. Use File → Open to open .txt files, Save to download content.');
+                alert('This is a simple in-browser text editor demo. Use File → Open to open .txt files, Save to write back (if the browser supports it), or Save As to download.');
             }
             function doAbout() {
                 alert('Text Editor\nA small demo editor. Built-in basic Open/Save/Find/Replace functionality.');
-            }
-
-            // helpers
-            function escapeHtml(s) {
-                return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-            }
-
-            function insertAtCursor(text) {
-                const s = getSelectionRange();
-                const before = editor.value.slice(0, s.start);
-                const after = editor.value.slice(s.end);
-                editor.value = before + text + after;
-                const pos = s.start + text.length;
-                editor.setSelectionRange(pos, pos);
-                editor.focus();
-                updatePosition();
-            }
-
-            function getSelectionRange() {
-                return { start: editor.selectionStart, end: editor.selectionEnd };
             }
 
             // central menu click dispatcher
