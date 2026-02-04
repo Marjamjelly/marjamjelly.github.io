@@ -153,3 +153,147 @@ body {
     text-align: right;
     flex-shrink: 0; /* Prevent shrinking */
 }
+
+/* ------------- Additional retro-styled UI helpers (modals, find panel, gutter) ------------- */
+
+/* Reuse VT323 for dialogs for a retro look */
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+:root {
+    --retro-bg: #ECE9D8;
+    --retro-accent: #000080;
+    --retro-border: #000;
+    --retro-btn-bg: #C0C0C0;
+    --retro-btn-fg: #000;
+    --dialog-font: 'VT323', monospace;
+}
+
+/* Modal backdrop (hidden by default) */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(163,163,163,0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9998;
+}
+
+.modal-backdrop.active { display: flex; }
+
+/* Dialog box in retro style */
+.dialog {
+    background: var(--retro-bg);
+    border: 3px solid var(--retro-border);
+    padding: 10px;
+    min-width: 320px;
+    max-width: 90%;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.15);
+    font-family: var(--dialog-font);
+    color: #000;
+}
+
+/* Title and body */
+.dialog .dialog-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size: 16px;
+    color: var(--retro-accent);
+}
+
+.dialog .dialog-body { margin-bottom:10px; white-space:normal; font-size:14px; color:#000080; }
+
+.dialog .dialog-controls {
+    display:flex;
+    gap:8px;
+    justify-content:flex-end;
+    flex-wrap:wrap;
+}
+
+/* Buttons that match the retro chrome */
+.btn {
+    background: var(--retro-btn-bg);
+    color: var(--retro-btn-fg);
+    border: 2px solid var(--retro-border);
+    padding: 6px 10px;
+    cursor: pointer;
+    font-family: var(--dialog-font);
+    font-size: 14px;
+}
+
+.btn.ghost {
+    background: transparent;
+    color: var(--retro-accent);
+    border-color: var(--retro-accent);
+}
+
+/* Inputs inside dialogs */
+.dialog input[type="text"], .dialog input[type="number"], .dialog select, .dialog textarea {
+    width: 100%;
+    padding: 6px;
+    background: #fff;
+    border: 2px solid var(--retro-border);
+    box-sizing: border-box;
+    font-family: var(--dialog-font);
+    font-size: 14px;
+}
+
+/* Find panel */
+.find-panel-wrap {
+    display: none;
+    position: fixed;
+    right: 12px;
+    top: 76px;
+    z-index: 9999;
+}
+
+.find-panel {
+    min-width: 360px;
+}
+
+.small-btn { padding:4px 8px; font-size:14px; }
+
+/* Gutter (line numbers) */
+.editor-wrapper {
+    position: relative;
+    display: flex;
+    width: 100%;
+    box-sizing: border-box;
+    height: calc(100% - 70px); /* leave space for title/menu/status */
+    border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+.gutter {
+    width: 48px;
+    background: #efefef;
+    border-right: 1px solid #ccc;
+    padding: 8px 6px;
+    box-sizing: border-box;
+    font-family: 'VT323', monospace;
+    font-size: 14px;
+    color: #444;
+    overflow: hidden;
+    text-align: right;
+    user-select: none;
+}
+
+.gutter pre {
+    margin: 0;
+    line-height: 1.35;
+    white-space: pre;
+}
+
+.text-area-wrap {
+    flex: 1;
+    position: relative;
+}
+
+/* Print utilities: will be injected when printing */
+@media print {
+    body * { visibility: hidden; }
+    #print-content, #print-content * { visibility: visible; }
+    #print-content { position: absolute; left: 0; top: 0; width: 100%; }
+}
