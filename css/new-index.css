@@ -1,5 +1,6 @@
 .flex-container {
     display: flex;
+    gap: 20 px;
 }
 .column {
     flex: 1;
