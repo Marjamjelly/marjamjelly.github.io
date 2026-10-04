@@ -1,0 +1,23 @@
+body {
+    font-family: 'Courier New', Courier, monospace;
+    color: #df3a3a;
+    background-color: #c0c0c0;
+    margin: 20px;
+}
+
+.header {
+    text-align: center;
+}
+
+a {
+    margin: 15px;
+    color: #ebebeb;
+    text-decoration: underline;
+}
+a:hover {
+  font-size: 110%;
+}
+h1 {
+    text-align: center;
+    size: 50em;
+}
