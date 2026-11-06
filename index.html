@@ -62,14 +62,5 @@ at a screen resolution of 1024x1. Please enable your ad blockers, disable high-h
 from Airplane Mode and set it to Boat Mode. For security reasons, please leave caps lock on while browsing.</footer>
   </body>
 
-  <script>
-    function updateClock() {
-      const now = new Date();
-      const time = now.toLocaleTimeString('en-US', { hour12: false });
-      const date = now.toLocaleDateString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric' });
-      document.getElementById('clock').textContent = date + ' ' + time;
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-  </script>
+  
 </html>
