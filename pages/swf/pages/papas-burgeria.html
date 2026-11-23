@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>papas-burgeria</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #000;
+      color: white;
+      font-family: monospace;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    #game-container {
+      width: min(100vw, 133.333dvh);
+      aspect-ratio: 4 / 3;
+      max-height: 100dvh;
+    }
+
+    ruffle-player {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    #status {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 9999;
+      background: #222;
+      color: white;
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+  </style>
+
+  <script src="../ruffle/ruffle.js"></script>
+</head>
+
+<body>
+  <div id="status">Loading Ruffle...</div>
+  <div id="game-container"></div>
+
+  <script>
+    const statusBox = document.getElementById("status");
+
+    window.RufflePlayer = window.RufflePlayer || {};
+
+    window.RufflePlayer.config = {
+      publicPath: "../ruffle/",
+      autoplay: "on",
+      unmuteOverlay: "visible",
+      backgroundColor: "#000000",
+      scale: "exactfit",
+      forceScale: true,
+      compatibilityRules: true,
+      logLevel: "debug",
+      allowNetworking: "all"
+    };
+
+    window.addEventListener("load", async () => {
+      try {
+        statusBox.textContent = "Starting Ruffle...";
+
+        const ruffle = window.RufflePlayer.newest();
+        const player = ruffle.createPlayer();
+
+        document
+          .getElementById("game-container")
+          .appendChild(player);
+
+        statusBox.textContent = "Loading...";
+
+        await player.load({
+          url: "./swf/papas-burgeria.swf",
+          compatibilityRules: true,
+          logLevel: "debug"
+        });
+
+        statusBox.style.display = "none";
+
+      } catch (err) {
+        statusBox.textContent = "ERROR: " + err.message;
+        console.error("RUN 3 loading error:", err);
+      }
+    });
+  </script>
+</body>
+</html>
